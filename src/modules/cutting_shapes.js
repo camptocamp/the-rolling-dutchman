@@ -24,12 +24,13 @@ function createFragmentsForStopTimes(fractionedShapeDict, shapeDists, stopTimes)
     throw Error(`Expecting the shape_dist_traveled for both list to be zero for both but are: ${shapeDists[0]
     } and: ${stopTimes[0].shape_dist_traveled}`);
   }
-  const lastindexShapeDist = 0;
+  let lastindexShapeDist = 0;
   for (let indexStopTimes = 1; indexStopTimes < stopTimes.length; indexStopTimes++) {
     for (let indexShapeDist = lastindexShapeDist; indexShapeDist < shapeDists.length;
       indexShapeDist++) {
       if (shapeDists[indexShapeDist] === stopTimes[indexStopTimes].shape_dist_traveled) {
         const key = makeKey(lastindexShapeDist, indexShapeDist);
+        lastindexShapeDist = indexShapeDist;
         const fragmentedTrip = new FragmentedTrip(
           stopTimes[indexStopTimes - 1].departure_time,
           stopTimes[indexStopTimes].arrival_time,

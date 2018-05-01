@@ -5,13 +5,25 @@ const gtfs_utils = require('./gtfs-utils');
 const mongoose = require('mongoose');
 const fs = require('fs');
 
+function allProgress(proms, progress_cb) {
+  let d = 0;
+  progress_cb(0);
+  proms.forEach((p) => {
+    p.then(() => {
+      d++;
+      progress_cb((d * 100) / proms.length);
+    });
+  });
+  return Promise.all(proms);
+}
+
 async function main() {
   await mongoose.connect('mongodb://localhost:27017/Wien');
   const servicesActives = await services_utils.getServicesActiveToday();
-  const shapes = await gtfs.getShapes(Object.assign({}, gtfs_utils.queryWithAgencyKey));
+  const shapes = await gtfs.getShapes(gtfs_utils.queryWithAgencyKey);
   const servicesIds = servicesActives.map(service => service.service_id);
   const finalDict = {};
-  await Promise.all(shapes.map(async (shapePoints) => {
+  const proms = shapes.map(async (shapePoints) => {
     const tripQuery = Object.assign(
       { shape_id: shapePoints[0].shape_id, service_id: { $in: servicesIds } },
       gtfs_utils.queryWithAgencyKey,
@@ -24,9 +36,13 @@ async function main() {
       });
       stopTimesList.push(stopTimes);
     }));
-    const fractionedDict = cutting_shapes.fractionShape(shapePoints, stopTimesList);
-    finalDict[shapePoints[0].shape_id] = fractionedDict;
-  }));
+    if (tripIds.length !== 0) {
+      const fractionedDict = cutting_shapes.fractionShape(shapePoints, stopTimesList);
+      finalDict[shapePoints[0].shape_id] = fractionedDict;
+    }
+  });
+  allProgress(proms, p => console.log(`% Done = ${p.toFixed(2)}`));
+  await Promise.all(proms);
   const path = '../../output/finalDict.json';
 
   fs.writeFile(path, JSON.stringify(finalDict), (error) => {

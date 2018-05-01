@@ -35,9 +35,9 @@ async function exampleIn() {
   await mongoose.connect('mongodb://localhost:27017/Wien');
   const agency_key = 'Wien_gtfs';
   const query = { agency_key, shape_id: { $in: ['11-WLB-j17-1.10.R', '11-WLB-j17-1.1.H'] } };
-  const shapes = await gtfs.getShapes(query);
-  console.log(JSON.stringify(shapes));
+  const trips = await gtfs.getTrips(query);
+  console.log(JSON.stringify(trips));
   await mongoose.connection.close();
 }
 
-main2();
+exampleIn();
