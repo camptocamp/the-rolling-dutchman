@@ -1,5 +1,3 @@
-const gtfs = require('gtfs');
-
 function FractionedShapeBuilder(key, trips) {
   this.key = key;
   this.trips = trips;
@@ -25,7 +23,8 @@ function createFragmentsForStopTimes(fractionedShapeDict, shapeDists, stopTimes)
   }
   const lastindexShapeDist = 0;
   for (let indexStopTimes = 1; indexStopTimes < stopTimes.length; indexStopTimes++) {
-    for (let indexShapeDist = lastindexShapeDist; indexShapeDist < shapeDists.length; indexShapeDist++) {
+    for (let indexShapeDist = lastindexShapeDist; indexShapeDist < shapeDists.length;
+      indexShapeDist++) {
       if (shapeDists[indexShapeDist] === stopTimes[indexStopTimes].shape_dist_traveled) {
         const key = makeKey(lastindexShapeDist, indexShapeDist);
         const fragmentedTrip = new FragmentedTrip(

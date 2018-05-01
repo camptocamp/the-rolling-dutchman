@@ -2,7 +2,6 @@ const gtfs = require('gtfs');
 const mongoose = require('mongoose');
 const gtfs_utils = require('./gtfs-utils');
 const cutting_shapes = require('./cutting_shapes');
-const services_utils = require('./services-utils');
 const fs = require('fs');
 
 

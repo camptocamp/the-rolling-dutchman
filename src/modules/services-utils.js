@@ -56,7 +56,7 @@ function weekDayToFilter(weekDay) {
       Object.assign(returnObject, { sunday: 1 });
       break;
     default:
-      throw Error(`weekday expected but: ${weekDay } received`);
+      throw Error(`weekday expected but: ${weekDay} received`);
   }
   return returnObject;
 }
@@ -73,10 +73,10 @@ async function getServicesActiveOnWeekday(weekDay) {
 
 // TODO write unit tests for this function
 function dateStringToDate(stringDate) {
-  const year = parseInt(stringDate.toString().substring(0, 4));
+  const year = parseInt(stringDate.toString().substring(0, 4), 10);
   // 0 -> January
-  const month = parseInt(stringDate.toString().substring(4, 6)) - 1;
-  const day = parseInt(stringDate.toString().substring(6, 8));
+  const month = parseInt(stringDate.toString().substring(4, 6), 10) - 1;
+  const day = parseInt(stringDate.toString().substring(6, 8), 10);
   return new Date(year, month, day);
 }
 
