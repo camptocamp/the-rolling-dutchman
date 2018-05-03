@@ -1,19 +1,36 @@
-class FractionedShapeBuilder {
-  constructor(key, trips) {
-    this.key = key;
-    this.trips = trips;
-  }
-  addTrip(fragmentedTrip) {
-    this.trips.push(fragmentedTrip);
-  }
-}
 class FragmentedTrip {
   constructor(start_time, end_time) {
     this.startTime = start_time;
     this.endTime = end_time;
-  };
+  }
+
+  toJSON() {
+    return { startTime: this.startTime, endTime: this.endTime };
+  }
 }
 
+class FractionedShapeDict {
+  constructor() {
+    this.innerDictionary = {};
+  }
+  addTrip(key, fragmentedTrip) {
+    if (this.innerDictionary[key] === undefined) {
+      this.innerDictionary[key] = [fragmentedTrip];
+    } else {
+      this.innerDictionary[key].push(fragmentedTrip);
+    }
+  }
+  toJSON() {
+    const returnObject = {};
+    const entries = Object.entries(this.innerDictionary);
+    entries.forEach((entry) => {
+      const object = {};
+      object[entry[0]] = entry[1].map(fractionedTrip => fractionedTrip.toJSON());
+      Object.assign(returnObject, object);
+    });
+    return returnObject;
+  }
+}
 
 function makeKey(first_index, second_index) {
   return `${first_index.toString()}${second_index.toString()}`;
@@ -35,10 +52,7 @@ function createFragmentsForStopTimes(fractionedShapeDict, shapeDists, stopTimes)
           stopTimes[indexStopTimes - 1].departure_time,
           stopTimes[indexStopTimes].arrival_time,
         );
-        if (fractionedShapeDict[key] === undefined) {
-          fractionedShapeDict[key] = new FractionedShapeBuilder(key, []);
-        }
-        fractionedShapeDict[key].addTrip(fragmentedTrip);
+        fractionedShapeDict.addTrip(key, fragmentedTrip);
       }
     }
   }
@@ -53,11 +67,13 @@ function createFragmentsForStopTimes(fractionedShapeDict, shapeDists, stopTimes)
 * an array of array -> each element of the array is a trip i.e an array of
 * stoptimes with shape_dist_traveled
 */
-exports.fractionShape = (shapePoints, stopTimesList) => {
-  const fractionedShapeDict = {};
+function fractionShape(shapePoints, stopTimesList) {
+  const fractionedShapeDict = new FractionedShapeDict();
   const shapeDists = shapePoints.map(shapePoint => shapePoint.shape_dist_traveled);
   stopTimesList.forEach((stopTimes) => {
     createFragmentsForStopTimes(fractionedShapeDict, shapeDists, stopTimes);
   });
   return fractionedShapeDict;
-};
+}
+
+export { fractionShape, makeKey, createFragmentsForStopTimes, FragmentedTrip, FractionedShapeDict };
