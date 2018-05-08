@@ -1,11 +1,13 @@
 import { Enum } from 'enumify';
-
 const gtfs = require('gtfs');
+const moment = require('moment');
+
+moment().format();
 
 class Weekday extends Enum {}
 Weekday.initEnum([
-  'MONDAY', 'TUESDAY', 'WEDNESDAY',
-  'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']);
+  'SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY',
+  'THURSDAY', 'FRIDAY', 'SATURDAY']);
 
 function intToWeekday(integer) {
   return Weekday.enumValues[integer];
@@ -61,15 +63,15 @@ function dateStringToDate(stringDate) {
 }
 
 exports.getServicesActiveToday = async () => {
-  const date = new Date(Date.now());
-  const day = date.getDay();
+  const date = moment();
+  const day = date.day();
   const weekDay = intToWeekday(day);
   const services = await getServicesActiveOnWeekday(weekDay);
   return services.filter((service) => {
-    const start_date = dateStringToDate(service.start_date);
-    const end_date = dateStringToDate(service.end_date);
-    // to include the last day (date library is total bs)
-    end_date.setDate(end_date.getDate() + 1);
-    return date >= start_date && date <= end_date;
+    const startDate = moment(service.start_date);
+    const endDate = moment(service.end_date);
+    endDate.add(1, 'day');
+    // to include the last day 
+    return date.isBetween(startDate, endDate);
   });
 };

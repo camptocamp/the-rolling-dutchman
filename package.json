@@ -12,6 +12,7 @@
     "enumify": "^1.0.4",
     "gtfs": "^1.6.2",
     "gtfs-to-geojson": "^0.4.8",
+    "moment": "^2.22.1",
     "mongoose": "^5.0.16"
   },
   "devDependencies": {
