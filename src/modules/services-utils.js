@@ -1,58 +1,38 @@
+import { Enum } from 'enumify';
+
 const gtfs = require('gtfs');
 
-const WEEKDAYS = Object.freeze({
-  SUNDAY: Symbol('sunday'),
-  MONDAY: Symbol('monday'),
-  TUESDAY: Symbol('tuesday'),
-  WEDNESDAY: Symbol('wednesday'),
-  THURSDAY: Symbol('thursdays'),
-  FRIDAY: Symbol('friday'),
-  SATURDAY: Symbol('saturday'),
-});
+class Weekday extends Enum {}
+Weekday.initEnum([
+  'MONDAY', 'TUESDAY', 'WEDNESDAY',
+  'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY']);
 
 function intToWeekday(integer) {
-  switch (integer) {
-    case 0:
-      return WEEKDAYS.SUNDAY;
-    case 1:
-      return WEEKDAYS.MONDAY;
-    case 2:
-      return WEEKDAYS.TUESDAY;
-    case 3:
-      return WEEKDAYS.WEDNESDAY;
-    case 4:
-      return WEEKDAYS.THURSDAY;
-    case 5:
-      return WEEKDAYS.FRIDAY;
-    case 6:
-      return WEEKDAYS.SATURDAY;
-    default:
-      throw Error(`expected value between 0 and 6 but is: ${String(integer)}`);
-  }
+  return Weekday.enumValues[integer];
 }
 
 function weekDayToFilter(weekDay) {
   const returnObject = {};
   switch (weekDay) {
-    case WEEKDAYS.MONDAY:
+    case Weekday.MONDAY:
       Object.assign(returnObject, { monday: 1 });
       break;
-    case WEEKDAYS.TUESDAY:
+    case Weekday.TUESDAY:
       Object.assign(returnObject, { tuesday: 1 });
       break;
-    case WEEKDAYS.WEDNESDAY:
+    case Weekday.WEDNESDAY:
       Object.assign(returnObject, { wednesday: 1 });
       break;
-    case WEEKDAYS.THURSDAY:
+    case Weekday.THURSDAY:
       Object.assign(returnObject, { thursday: 1 });
       break;
-    case WEEKDAYS.FRIDAY:
+    case Weekday.FRIDAY:
       Object.assign(returnObject, { friday: 1 });
       break;
-    case WEEKDAYS.SATURDAY:
+    case Weekday.SATURDAY:
       Object.assign(returnObject, { saturday: 1 });
       break;
-    case WEEKDAYS.SUNDAY:
+    case Weekday.SUNDAY:
       Object.assign(returnObject, { sunday: 1 });
       break;
     default:

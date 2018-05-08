@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "enumify": "^1.0.4",
     "gtfs": "^1.6.2",
     "gtfs-to-geojson": "^0.4.8",
     "mongoose": "^5.0.16"
