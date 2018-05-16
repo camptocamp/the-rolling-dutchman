@@ -1,14 +1,17 @@
-function FractionedShapeBuilder(key, trips) {
-  this.key = key;
-  this.trips = trips;
-  this.addTrip = (fragmentedTrip) => {
+class FractionedShapeBuilder {
+  constructor(key, trips) {
+    this.key = key;
+    this.trips = trips;
+  }
+  addTrip(fragmentedTrip) {
     this.trips.push(fragmentedTrip);
-  };
+  }
 }
-
-function FragmentedTrip(start_time, end_time) {
-  this.st = start_time;
-  this.et = end_time;
+class FragmentedTrip {
+  constructor(start_time, end_time) {
+    this.startTime = start_time;
+    this.endTime = end_time;
+  };
 }
 
 
