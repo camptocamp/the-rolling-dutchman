@@ -1,6 +1,6 @@
 /* eslint-disable */
 import 'babel-polyfill'
-import {makeKey, createFragmentsForStopTimes, FractionedShapeDict} from '../src/modules/cutting_shapes';
+import {makeKey, createFragmentsForStopTimes, FractionedShapeDict, FragmentedTrip} from '../src/modules/cutting_shapes';
 
 const assert = require('assert');
 
@@ -48,3 +48,18 @@ describe('createFragmentsForStopTimes', () => {
     assert.deepEqual(shapeDict2.toJSON(), secondResult);
   });
 });
+
+describe('the method addTrip', () => {
+  const fractionedShapeDict = new FractionedShapeDict();
+  const trip1 =  new FragmentedTrip("08:10:11", "08:12:11")
+  const trip2 =  new FragmentedTrip("08:10:11", "08:14:11")
+  const key = "04";
+  it('should add a simpleTrip correctly', () => {
+    fractionedShapeDict.addTrip(key, trip1);
+    assert.equal(fractionedShapeDict.innerDictionary[key][0], trip1)
+  })
+  it('should append if an existing trip exist', () => {
+    fractionedShapeDict.addTrip(key, trip2);
+    assert.equal(fractionedShapeDict.innerDictionary[key].length, 2)
+  })
+})
