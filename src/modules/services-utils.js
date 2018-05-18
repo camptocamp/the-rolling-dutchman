@@ -68,8 +68,8 @@ exports.getServicesActiveToday = async () => {
   const weekDay = intToWeekday(day);
   const services = await getServicesActiveOnWeekday(weekDay);
   return services.filter((service) => {
-    const startDate = moment(service.start_date);
-    const endDate = moment(service.end_date);
+    const startDate = moment(service.start_date.toString());
+    const endDate = moment(service.end_date.toString());
     endDate.add(1, 'day');
     // to include the last day 
     return date.isBetween(startDate, endDate);

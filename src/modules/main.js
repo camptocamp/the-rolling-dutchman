@@ -1,3 +1,5 @@
+import { featuresToGeoJSON } from './geojson-utils';
+
 const cutting_shapes = require('./cutting_shapes');
 const services_utils = require('./services-utils');
 const gtfs = require('gtfs');
@@ -17,42 +19,74 @@ function allProgress(proms, progress_cb) {
   return Promise.all(proms);
 }
 
-async function main() {
-  await mongoose.connect('mongodb://localhost:27017/Wien');
-  const servicesActives = await services_utils.getServicesActiveToday();
-  const shapes = await gtfs.getShapes(gtfs_utils.queryWithAgencyKey);
-  const servicesIds = servicesActives.map(service => service.service_id);
-  const finalDict = {};
-  const proms = shapes.map(async (shapePoints) => {
+function getStopTimesFromTripIds(tripIds, stopTimesList) {
+  return tripIds.map(async (trip) => {
+    let stopTimes = [];
+    try {
+      stopTimes = await gtfs.getStoptimes({ trip_id: trip.trip_id }, {
+        _id: 0, trip_id: 0, pickup_type: 0, stop_sequence: 0, drop_off_type: 0, agency_key: 0,
+      });
+    } catch (error) {
+      console.log(error.message);
+    }
+    stopTimesList.push(stopTimes);
+  });
+}
+
+async function connect() {
+  mongoose.connect('mongodb://localhost:27017/Wien');
+}
+
+async function closeConnection() {
+  mongoose.connection.close();
+}
+
+function getFragmentShapes(shapes, servicesIds) {
+  return shapes.map(async (shapePoints) => {
     const tripQuery = Object.assign(
-      { shape_id: shapePoints[0].shape_id, service_id: { $in: servicesIds } },
+      { shape_id: shapePoints[0].shape_id/* , service_id: { $in: servicesIds } */ },
       gtfs_utils.queryWithAgencyKey,
     );
     const tripIds = await gtfs.getTrips(tripQuery, { trip_id: 1 });
     const stopTimesList = [];
-    await Promise.all(tripIds.map(async (trip) => {
-      const stopTimes = await gtfs.getStoptimes({ trip_id: trip.trip_id }, {
-        _id: 0, trip_id: 0, pickup_type: 0, stop_sequence: 0, drop_off_type: 0, agency_key: 0,
-      });
-      stopTimesList.push(stopTimes);
-    }));
     if (tripIds.length !== 0) {
-      const fractionedDict = cutting_shapes.fractionShape(shapePoints, stopTimesList);
-      finalDict[shapePoints[0].shape_id] = fractionedDict;
+      const promises = getStopTimesFromTripIds(tripIds, stopTimesList);
+      await Promise.all(promises);
+      const test = cutting_shapes.fractionShape(shapePoints, stopTimesList);
+      return test;
     }
+    return [];
   });
-  allProgress(proms, p => console.log(`% Done = ${p.toFixed(2)}`));
-  await Promise.all(proms);
-  const path = '../../output/finalDict.json';
+}
 
-  fs.writeFile(path, JSON.stringify(finalDict), (error) => {
+async function main() {
+  await connect();
+  const servicesActives = await services_utils.getServicesActiveToday();
+  const shapes = await gtfs.getShapes(Object.assign({ shape_id: '11-WLB-j17-1.1.H' }, gtfs_utils.queryWithAgencyKey));
+  const servicesIds = servicesActives.map(service => service.service_id);
+  // const servicesIds = ['T3#7'];
+  const proms = getFragmentShapes(shapes, servicesIds);
+  allProgress(proms, p => console.log(`% Done = ${p.toFixed(2)}`));
+  let fragmentShapes;
+  try {
+    fragmentShapes = await Promise.all(proms);
+  } catch (error) {
+    console.log(error.messge);
+  }
+  const path = '../../output/test.geojson';
+  const features = fragmentShapes.map(fragmentShape => fragmentShape.toGeoJSONFeatures());
+  const geojson = featuresToGeoJSON(features.reduce(
+    (accumulator, currentValue) => accumulator.concat(accumulator, currentValue),
+    [],
+  ));
+  fs.writeFile(path, JSON.stringify(geojson), (error) => {
     if (error) {
       console.error(`write error:  ${error.message}`);
     } else {
       console.log(`Successful Write to ${path}`);
     }
   });
-  await mongoose.connection.close();
+  await closeConnection();
 }
 
 main();
