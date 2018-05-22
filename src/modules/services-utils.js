@@ -1,58 +1,40 @@
+import { Enum } from 'enumify';
 const gtfs = require('gtfs');
+const moment = require('moment');
 
-const WEEKDAYS = Object.freeze({
-  SUNDAY: Symbol('sunday'),
-  MONDAY: Symbol('monday'),
-  TUESDAY: Symbol('tuesday'),
-  WEDNESDAY: Symbol('wednesday'),
-  THURSDAY: Symbol('thursdays'),
-  FRIDAY: Symbol('friday'),
-  SATURDAY: Symbol('saturday'),
-});
+moment().format();
+
+class Weekday extends Enum {}
+Weekday.initEnum([
+  'SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY',
+  'THURSDAY', 'FRIDAY', 'SATURDAY']);
 
 function intToWeekday(integer) {
-  switch (integer) {
-    case 0:
-      return WEEKDAYS.SUNDAY;
-    case 1:
-      return WEEKDAYS.MONDAY;
-    case 2:
-      return WEEKDAYS.TUESDAY;
-    case 3:
-      return WEEKDAYS.WEDNESDAY;
-    case 4:
-      return WEEKDAYS.THURSDAY;
-    case 5:
-      return WEEKDAYS.FRIDAY;
-    case 6:
-      return WEEKDAYS.SATURDAY;
-    default:
-      throw Error(`expected value between 0 and 6 but is: ${String(integer)}`);
-  }
+  return Weekday.enumValues[integer];
 }
 
 function weekDayToFilter(weekDay) {
   const returnObject = {};
   switch (weekDay) {
-    case WEEKDAYS.MONDAY:
+    case Weekday.MONDAY:
       Object.assign(returnObject, { monday: 1 });
       break;
-    case WEEKDAYS.TUESDAY:
+    case Weekday.TUESDAY:
       Object.assign(returnObject, { tuesday: 1 });
       break;
-    case WEEKDAYS.WEDNESDAY:
+    case Weekday.WEDNESDAY:
       Object.assign(returnObject, { wednesday: 1 });
       break;
-    case WEEKDAYS.THURSDAY:
+    case Weekday.THURSDAY:
       Object.assign(returnObject, { thursday: 1 });
       break;
-    case WEEKDAYS.FRIDAY:
+    case Weekday.FRIDAY:
       Object.assign(returnObject, { friday: 1 });
       break;
-    case WEEKDAYS.SATURDAY:
+    case Weekday.SATURDAY:
       Object.assign(returnObject, { saturday: 1 });
       break;
-    case WEEKDAYS.SUNDAY:
+    case Weekday.SUNDAY:
       Object.assign(returnObject, { sunday: 1 });
       break;
     default:
@@ -81,15 +63,15 @@ function dateStringToDate(stringDate) {
 }
 
 exports.getServicesActiveToday = async () => {
-  const date = new Date(Date.now());
-  const day = date.getDay();
+  const date = moment();
+  const day = date.day();
   const weekDay = intToWeekday(day);
   const services = await getServicesActiveOnWeekday(weekDay);
   return services.filter((service) => {
-    const start_date = dateStringToDate(service.start_date);
-    const end_date = dateStringToDate(service.end_date);
-    // to include the last day (date library is total bs)
-    end_date.setDate(end_date.getDate() + 1);
-    return date >= start_date && date <= end_date;
+    const startDate = moment(service.start_date);
+    const endDate = moment(service.end_date);
+    endDate.add(1, 'day');
+    // to include the last day 
+    return date.isBetween(startDate, endDate);
   });
 };
