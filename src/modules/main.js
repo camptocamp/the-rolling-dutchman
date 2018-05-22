@@ -44,7 +44,7 @@ async function closeConnection() {
 function getFragmentShapes(shapes, servicesIds) {
   return shapes.map(async (shapePoints) => {
     const tripQuery = Object.assign(
-      { shape_id: shapePoints[0].shape_id/* , service_id: { $in: servicesIds } */ },
+      { shape_id: shapePoints[0].shape_id, service_id: { $in: servicesIds } },
       gtfs_utils.queryWithAgencyKey,
     );
     const tripIds = await gtfs.getTrips(tripQuery, { trip_id: 1 });
@@ -62,9 +62,11 @@ function getFragmentShapes(shapes, servicesIds) {
 async function main() {
   await connect();
   const servicesActives = await services_utils.getServicesActiveToday();
-  const shapes = await gtfs.getShapes(Object.assign({ shape_id: '11-WLB-j17-1.1.H' }, gtfs_utils.queryWithAgencyKey));
+  const shapes = await gtfs.getShapes(Object.assign(
+    //{shape_id: {$in: ["11-WLB-j17-1.1.H", "11-WLB-j17-1.10.R"] }},
+     gtfs_utils.queryWithAgencyKey,
+    ));
   const servicesIds = servicesActives.map(service => service.service_id);
-  // const servicesIds = ['T3#7'];
   const proms = getFragmentShapes(shapes, servicesIds);
   allProgress(proms, p => console.log(`% Done = ${p.toFixed(2)}`));
   let fragmentShapes;
@@ -74,7 +76,12 @@ async function main() {
     console.log(error.messge);
   }
   const path = '../../output/test.geojson';
-  const features = fragmentShapes.map(fragmentShape => fragmentShape.toGeoJSONFeatures());
+  // filter shapes which have no services actives
+  const fragmentShapesFiltered = fragmentShapes.filter(obj => obj.toGeoJSONFeatures !== undefined);
+  // currently a shape without trip gets dumped, TODO see if it is a correct behaviour
+  const features = fragmentShapesFiltered.map((fragmentShape) => {
+    return fragmentShape.toGeoJSONFeatures();
+  });
   const geojson = featuresToGeoJSON(features.reduce(
     (accumulator, currentValue) => accumulator.concat(accumulator, currentValue),
     [],
