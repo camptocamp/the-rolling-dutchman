@@ -1,7 +1,6 @@
 /* eslint-disable */
 import 'babel-polyfill'
 import {makeKey, createFragmentsForStopTimes, FractionedShapeDict, FragmentedTrip} from '../src/modules/cutting_shapes';
-
 const assert = require('assert');
 
 describe('make key', () => {
