@@ -5,6 +5,10 @@
     "mapbox:type": "template"
   },
   "sources": {
+    "GTFS_Vector": {
+      "type": "vector",
+      "url": "http://localhost:8080/data/merged.json"
+    },
     "natural_earth_shaded_relief": {
       "maxzoom": 6,
       "tileSize": 256,
@@ -16,10 +20,6 @@
     "openmaptiles": {
       "type": "vector",
       "url": "https://free.tilehosting.com/data/v3.json?key=tXiQqN3lIgskyDErJCeY"
-    },
-    "GTFS_Vector": {
-      "type": "vector",
-      "url": "http://localhost:8080/data/merged.json"
     }
   },
   "sprite": "https://rawgit.com/lukasmartinelli/osm-liberty/gh-pages/sprites/osm-liberty",
