@@ -1,35 +1,33 @@
 <!DOCTYPE html>
-<!--
-To change this license header, choose License Headers in Project Properties.
-To change this template file, choose Tools | Templates
-and open the template in the editor.
--->
 <html>
-    <head>
-        <title>Toggle Layer</title>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
-        <link href="node_modules/leaflet/dist/leaflet.css" rel="stylesheet">
+<head>
+    <meta charset='utf-8' />
+    <title>Get features under the mouse pointer</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.45.0/mapbox-gl.css' rel='stylesheet' />
+    <style>
+        body { margin:0; padding:0; }
+        #map { position:absolute; top:0; bottom:0; width:100%; }
+    </style>
+</head>
+<body>
 
-        <!-- Mapbox GL -->
-        <link href="node_modules/mapbox-gl/dist/mapbox-gl.css" rel="stylesheet">
-        <link href="css/style_index.css" rel="stylesheet">
-        <style>
-            body { margin:0; padding:0; }
-            #map { position:absolute; top:0; bottom:0; width:100%; }
-        </style>
-    </head>
-    <body>
-        <style>
-            #menu {
-                position: absolute;
-                background: #fff;
-                padding: 10px;
-                font-family: "Open Sans", sans-serif;
-            }
-        </style>
-        <pre id="info"></pre>
-        <div id="map" class="map"></div>
-    </body>
-
+<style>
+    #features {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 300px;
+        overflow: auto;
+        background: rgba(255, 255, 255, 0.8);
+    }
+    #map canvas {
+        cursor: crosshair;
+    }
+</style>
+<div id='map'></div>
+<pre id='features'></pre>
+</body>
+</html>
 </html>

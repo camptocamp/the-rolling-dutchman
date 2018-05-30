@@ -1,5 +1,5 @@
 import mapboxgl from 'mapbox-gl';
-
+import { activateClickCallback } from './modules/dataInteraction/debug';
 
 const map = new mapboxgl.Map({
   container: 'map',
@@ -8,3 +8,4 @@ const map = new mapboxgl.Map({
   zoom: 10,
 });
 map.showTileBoundaries = true;
+activateClickCallback(map);
