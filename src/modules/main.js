@@ -90,7 +90,7 @@ async function main() {
   } catch (error) {
     console.log(error.messge);
   }
-  const path = '../../output/full.geojson';
+  const path = '../../output/fragmented_shapes_alternative.geojson';
   // filter shapes which have no services actives
   const fragmentShapesFiltered = fragmentShapes.filter(obj => obj.toGeoJSONFeatures !== undefined);
   // currently a shape without trip gets dumped, TODO see if it is a correct behaviour

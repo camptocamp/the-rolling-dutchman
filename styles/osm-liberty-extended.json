@@ -3148,7 +3148,7 @@
       "id": "shapes_fragmented",
       "type": "line",
       "source": "GTFS_Vector",
-      "source-layer": "full",
+      "source-layer": "schedule",
       "minzoom": 13,
       "maxzoom": 24,
       "paint": {
