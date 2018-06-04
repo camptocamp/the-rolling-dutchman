@@ -1,7 +1,13 @@
+function filterFeatures(features) {
+  const gtfsLayerIds = ['stops', 'routes', 'shapes_fragmented'];
+  return features.filter(feature => gtfsLayerIds.includes(feature.layer.id));
+}
+
 function activateClickCallback(map) {
   map.on('click', (e) => {
     const features = map.queryRenderedFeatures(e.point);
-    document.getElementById('features').innerHTML = JSON.stringify(features, null, 2);
+    const filteredFeatures = filterFeatures(features);
+    document.getElementById('features').innerHTML = JSON.stringify(filteredFeatures, null, 2);
   });
 }
 
