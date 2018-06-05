@@ -1,9 +1,3 @@
-import { min } from 'moment';
-
-const _ = require('lodash');
-const moment = require('moment');
-
-
 function dropSeconds(hhmmss) {
   const time = hhmmss.split(':');
   if (time.length !== 3) {
@@ -33,9 +27,9 @@ function differenceInMinutes(start, end) {
 }
 
 class FragmentedTrip {
-  constructor(start_time, end_time) {
-    this.startTime = start_time;
-    this.endTime = end_time;
+  constructor(startTime, endTime) {
+    this.startTime = startTime;
+    this.endTime = endTime;
   }
   toJSON() {
     return {
