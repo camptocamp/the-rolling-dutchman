@@ -11,12 +11,12 @@ Expects also that the points corresponding to stop_location are repeated twice (
 ## Import data
 * get GTFS from 
 * install mongodb 
-* launch mongodb (sudo service mongod start --setParameter cusrorTimeoutMillis=1800000) (this parameter may be useful)
+* launch mongodb (sudo service mongod start --setParameter cursorTimeoutMillis=1800000) (this parameter may be useful)
 * import gtfs to mongodb using node-gtfs
 * cd modules/ && node --require babel-register main.js
 * cd ../../out/
 * Use tippecanoe
-* tippecanoe --no-tile-size-limit -o tfs_tiles.mbtiles full.geojson
+* tippecanoe --no-tile-size-limit -o gtfs_tiles.mbtiles full.geojson
 
 variant: it is possible to use gtfs-to-geojson to generate a file without the schedule.
 It is then possible to use parameters --minimum-zoom= and --maximum-zoom= to generate tiles for specific zoom levels.
