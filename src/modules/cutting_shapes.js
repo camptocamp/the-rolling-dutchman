@@ -20,8 +20,12 @@ function toMinutes(hour, minutes) {
 function differenceInMinutes(start, end) {
   const firstHoursMinutes = dropSeconds(start).split(':');
   const secondHoursMinutes = dropSeconds(end).split(':');
-  const minutesDifferences = toMinutes(secondHoursMinutes[0], secondHoursMinutes[1]) -
-  toMinutes(firstHoursMinutes[0], firstHoursMinutes[1]);
+  const firstMinutes = parseInt(firstHoursMinutes[1], 10);
+  const firstHours = parseInt(firstHoursMinutes[0], 10);
+  const secondMinutes = parseInt(secondHoursMinutes[1], 10);
+  const secondHours = parseInt(secondHoursMinutes[0], 10);
+  const minutesDifferences = toMinutes(secondHours, secondMinutes) -
+  toMinutes(firstHours, firstMinutes);
   if (minutesDifferences < 0) {
     throw Error(`difference is negative between: ${start} and ${end}`);
   }
@@ -116,7 +120,7 @@ function createFragmentsForStopTimes(fractionedShape, shapeDists, stopTimes) {
     const key = makeKey(acc, nextIndex);
     const fragmentedTrip = new FragmentedTrip(
       stopTimes[index].departure_time,
-      stopTimes[index + 1].departure_time,
+      stopTimes[index + 1].arrival_time,
     );
     acc = nextIndex;
     fractionedShape.addTrip(key, fragmentedTrip);
@@ -142,4 +146,8 @@ function fractionShape(shapePoints, stopTimesList) {
   return fractionedShape;
 }
 
-export { fractionShape, makeKey, createFragmentsForStopTimes, FragmentedTrip, FractionedShape };
+export {
+  fractionShape, makeKey, createFragmentsForStopTimes,
+  FragmentedTrip, FractionedShape, differenceInMinutes,
+  toMinutes, dropSeconds,
+};
