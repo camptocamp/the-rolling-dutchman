@@ -1,0 +1,10 @@
+{
+  "outputPath" : "output/geojson/stops.geojson",
+  "mongoUrl": "mongodb://localhost:27017/Wien",
+  "agencies": [
+    {
+      "agency_key": "Wien_gtfs",
+      "path": "./data/Wien/gtfs.zip"
+    }
+  ]
+}

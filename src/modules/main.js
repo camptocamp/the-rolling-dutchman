@@ -11,10 +11,16 @@ function allProgress(proms, progress_cb) {
   let d = 0;
   progress_cb(0);
   proms.forEach((p) => {
-    p.then(() => {
-      d++;
-      progress_cb((d * 100) / proms.length);
-    });
+    p.then(
+      () => {
+        d++;
+        progress_cb((d * 100) / proms.length);
+      },
+      () => {
+        d++;
+        progress_cb((d * 100) / proms.length);
+      },
+    );
   });
   return Promise.all(proms);
 }
@@ -43,28 +49,39 @@ async function closeConnection() {
 
 function getFragmentShapes(shapes, servicesIds) {
   return shapes.map(async (shapePoints) => {
-    const tripQuery = Object.assign(
-      { shape_id: shapePoints[0].shape_id/* , service_id: { $in: servicesIds } */ },
-      gtfs_utils.queryWithAgencyKey,
-    );
-    const tripIds = await gtfs.getTrips(tripQuery, { trip_id: 1 });
-    const stopTimesList = [];
-    if (tripIds.length !== 0) {
-      const promises = getStopTimesFromTripIds(tripIds, stopTimesList);
-      await Promise.all(promises);
-      const test = cutting_shapes.fractionShape(shapePoints, stopTimesList);
-      return test;
+    try {
+      const tripQuery = Object.assign(
+        { shape_id: shapePoints[0].shape_id, service_id: { $in: servicesIds } },
+        gtfs_utils.queryWithAgencyKey,
+      );
+      const tripIds = await gtfs.getTrips(tripQuery, { trip_id: 1 });
+      const stopTimesList = [];
+      if (tripIds.length !== 0) {
+        const promises = getStopTimesFromTripIds(tripIds, stopTimesList);
+        await Promise.all(promises);
+        const test = cutting_shapes.fractionShape(shapePoints, stopTimesList);
+        return test;
+      }
+      return [];
+    } catch (error) {
+      console.log(error);
+      return [];
     }
-    return [];
   });
+}
+
+function filterByFactor(array, factor) {
+  return array.filter((elem, index) => (index % factor) === 0);
 }
 
 async function main() {
   await connect();
   const servicesActives = await services_utils.getServicesActiveToday();
-  const shapes = await gtfs.getShapes(Object.assign({ shape_id: '11-WLB-j17-1.1.H' }, gtfs_utils.queryWithAgencyKey));
+  const shapes = await gtfs.getShapes(Object.assign(
+    // {shape_id: {$in: ["11-WLB-j17-1.1.H", "11-WLB-j17-1.10.R"] }},
+    gtfs_utils.queryWithAgencyKey));
+  //const filteredShapes = shapes.filter((shape, index) => (index % 10) === 0);
   const servicesIds = servicesActives.map(service => service.service_id);
-  // const servicesIds = ['T3#7'];
   const proms = getFragmentShapes(shapes, servicesIds);
   allProgress(proms, p => console.log(`% Done = ${p.toFixed(2)}`));
   let fragmentShapes;
@@ -73,10 +90,13 @@ async function main() {
   } catch (error) {
     console.log(error.messge);
   }
-  const path = '../../output/test.geojson';
-  const features = fragmentShapes.map(fragmentShape => fragmentShape.toGeoJSONFeatures());
+  const path = '../../output/fragmented_shapes_alternative.geojson';
+  // filter shapes which have no services actives
+  const fragmentShapesFiltered = fragmentShapes.filter(obj => obj.toGeoJSONFeatures !== undefined);
+  // currently a shape without trip gets dumped, TODO see if it is a correct behaviour
+  const features = fragmentShapesFiltered.map(fragmentShape => fragmentShape.toGeoJSONFeatures());
   const geojson = featuresToGeoJSON(features.reduce(
-    (accumulator, currentValue) => accumulator.concat(accumulator, currentValue),
+    (accumulator, currentValue) => accumulator.concat(currentValue),
     [],
   ));
   fs.writeFile(path, JSON.stringify(geojson), (error) => {

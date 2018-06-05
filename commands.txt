@@ -1,0 +1,4 @@
+tippecanoe -o onlyShapes10-12.mbtiles -l Wien-gtfs -pk --minimum-zoom=10 --maximum-zoom=12 ../geojson/Wien_gtfs/Wien_gtfs.geojson 
+tippecanoe -o stops10-15.mbtiles -l stops -pk -r1 --minimum-zoom=10 --maximum-zoom=15 geojson/stops.geojson 
+tile-join -pk -f -o merged.mbtiles gtfs_vector.mbtiles onlyShapes10-12.mbtiles stops10-15.mbtiles 
+tippecanoe -pk -o gtfs_vector.mbtiles --minimum-zoom=13 --maximum-zoom=15 -l schedule 20180528/fragmented_shapes_alternative.geojson

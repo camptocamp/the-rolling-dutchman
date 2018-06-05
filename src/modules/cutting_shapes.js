@@ -1,13 +1,43 @@
+import { min } from 'moment';
+
 const _ = require('lodash');
+const moment = require('moment');
+
+
+function dropSeconds(hhmmss) {
+  const time = hhmmss.split(':');
+  if (time.length !== 3) {
+    throw new Error(`FragmentedTrip contains an unexpected format of schedule,
+     expected hh:mm:ss, got: ${hhmmss}`);
+  }
+  return time.slice(0, 2).join(':');
+}
+
+function toMinutes(hour, minutes) {
+  return (hour * 60) + minutes;
+}
+
+function differenceInMinutes(start, end) {
+  const firstHoursMinutes = dropSeconds(start).split(':');
+  const secondHoursMinutes = dropSeconds(end).split(':');
+  const minutesDifferences = toMinutes(secondHoursMinutes[0], secondHoursMinutes[1]) -
+  toMinutes(firstHoursMinutes[0], firstHoursMinutes[1]);
+  if (minutesDifferences < 0) {
+    throw Error(`difference is negative between: ${start} and ${end}`);
+  }
+  return minutesDifferences;
+}
 
 class FragmentedTrip {
   constructor(start_time, end_time) {
     this.startTime = start_time;
     this.endTime = end_time;
   }
-
   toJSON() {
-    return { startTime: this.startTime, endTime: this.endTime };
+    return {
+      startTime: dropSeconds(this.startTime),
+      travelTime: differenceInMinutes(this.startTime, this.endTime),
+    };
   }
 }
 
