@@ -28,7 +28,7 @@ describe('differenceInMinutes', () => {
   const hour2 = '08:15:00';
   const hour3 = '08:15:43';
   const hour4 = '09:08:00';
-  it('should throw an error if the difference is negative', () => {
+  it('should throw an error if the difference an inversion in the time is probable', () => {
     assert.throws(() => differenceInMinutes(hour2, hour), Error);
   })
   it('should return the correct difference', () => {

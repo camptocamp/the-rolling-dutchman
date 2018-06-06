@@ -1,3 +1,9 @@
+const MAXIMUM_TRAVEL_HOURS = 20;
+
+function mod(n, m) {
+  return ((n % m) + m) % m;
+}
+
 function dropSeconds(hhmmss) {
   const time = hhmmss.split(':');
   if (time.length !== 3) {
@@ -18,10 +24,12 @@ function differenceInMinutes(start, end) {
   const firstHours = parseInt(firstHoursMinutes[0], 10);
   const secondMinutes = parseInt(secondHoursMinutes[1], 10);
   const secondHours = parseInt(secondHoursMinutes[0], 10);
-  const minutesDifferences = toMinutes(secondHours, secondMinutes) -
+  let minutesDifferences = toMinutes(secondHours, secondMinutes) -
   toMinutes(firstHours, firstMinutes);
-  if (minutesDifferences < 0) {
-    throw Error(`difference is negative between: ${start} and ${end}`);
+  minutesDifferences = mod(minutesDifferences, 24 * 60);
+  if (minutesDifferences > 20 * 60) {
+    throw Error(`A travel seems to take more than ${MAXIMUM_TRAVEL_HOURS} hours,
+    are you sure that startTime: ${start} and endTime ${end} are not inverted ?`);
   }
   return minutesDifferences;
 }
