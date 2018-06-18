@@ -11,4 +11,4 @@ function activateClickCallback(map) {
   });
 }
 
-export default { activateClickCallback };
+export { activateClickCallback };
