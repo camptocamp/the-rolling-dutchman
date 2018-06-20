@@ -1,7 +1,7 @@
 /* eslint-disable */
 import 'babel-polyfill'
 import {makeKey, createFragmentsForStopTimes, FractionedShape,
-   FragmentedTrip, differenceInMinutes, toMinutes, dropSeconds} from '../src/modules/cutting_shapes';
+   FragmentedTrip, differenceInMinutes, toMinutes, dropSeconds, removeDuplicatesInSorted} from '../src/modules/cutting_shapes';
 const assert = require('assert');
 
 describe('make key', () => {
@@ -56,8 +56,8 @@ describe('createFragmentsForStopTimes', () => {
     mockUpStopTime(hour2, hour2, 1), mockUpStopTime(hour3, hour4, 3)];
   const stopTimes2 = [mockUpStopTime(hour1, hour1, 0), mockUpStopTime(hour2, hour2, 3)];
   const shapeDist = [0, 1, 1, 3, 3];
-  const firstResult = {"0,2": [{startTime: strippedHour1, travelTime: 2}], "2,4": [{startTime: strippedHour2, travelTime: 242}]};
-  const secondResult = {"0,4": [{startTime: strippedHour1, travelTime: 2}]};
+  const firstResult = {"0,1": [{startTime: strippedHour1, travelTime: 2}], "1,3": [{startTime: strippedHour2, travelTime: 242}]};
+  const secondResult = {"0,3": [{startTime: strippedHour1, travelTime: 2}]};
   console.log(shapeDict1);
   createFragmentsForStopTimes(shapeDict1, shapeDist, stopTimes1);
   createFragmentsForStopTimes(shapeDict2, shapeDist, stopTimes2);
@@ -86,5 +86,12 @@ describe('the method addTrip', () => {
   it('should append if an existing trip exist', () => {
     fractionedShape.addTrip(key, trip2);
     assert.equal(fractionedShape.innerDictionary[key].length, 2)
+  })
+})
+
+describe('the function removeDuplicatesInSorted', () => {
+  const array = [1, 1, 2, 2, 2, 3, 3, 4, 4];
+  it('should filter duplicates in an array', () => {
+    assert.deepEqual(removeDuplicatesInSorted(array), [1, 2, 3, 4]);
   })
 })

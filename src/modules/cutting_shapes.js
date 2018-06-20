@@ -97,15 +97,20 @@ function makeKey(firstIndex, secondIndex) {
   return `${firstIndex.toString()},${secondIndex.toString()}`;
 }
 
+function removeDuplicatesInSorted(a) {
+  return a.filter((item, pos, ary) => (!pos) || (item !== ary[pos - 1]));
+}
+
 // assume that both begin to zero
 // warning, potentially bugged function
 function splitShapeDistByStopTimes(shapeDistList, stopTimes) {
+  const shapeDistFiltered = removeDuplicatesInSorted(shapeDistList);
   const splittedList = [];
   let beginIndex = 0;
   stopTimes.slice(1, stopTimes.length).forEach((stopTime) => {
-    const lastIndex = shapeDistList.indexOf(stopTime.shape_dist_traveled);
-    splittedList.push(shapeDistList.slice(beginIndex, lastIndex + 1));
-    beginIndex = lastIndex + 1;
+    const lastIndex = shapeDistFiltered.indexOf(stopTime.shape_dist_traveled);
+    splittedList.push(shapeDistFiltered.slice(beginIndex, lastIndex + 1));
+    beginIndex = lastIndex;
   });
   return splittedList;
 }
@@ -116,15 +121,12 @@ function createFragmentsForStopTimes(fractionedShape, shapeDists, stopTimes) {
     } and: ${stopTimes[0].shape_dist_traveled}`);
   }
   const splittedShape = splitShapeDistByStopTimes(shapeDists, stopTimes);
-  let acc = 0;
   splittedShape.forEach((fragment, index) => {
-    const nextIndex = acc + fragment.length;
-    const key = makeKey(acc, nextIndex);
+    const key = makeKey(fragment[0], fragment[fragment.length - 1]);
     const fragmentedTrip = new FragmentedTrip(
       stopTimes[index].departure_time,
       stopTimes[index + 1].arrival_time,
     );
-    acc = nextIndex;
     fractionedShape.addTrip(key, fragmentedTrip);
   });
 }
@@ -151,5 +153,5 @@ function fractionShape(shapePoints, stopTimesList) {
 export {
   fractionShape, makeKey, createFragmentsForStopTimes,
   FragmentedTrip, FractionedShape, differenceInMinutes,
-  toMinutes, dropSeconds,
+  toMinutes, dropSeconds, removeDuplicatesInSorted,
 };
