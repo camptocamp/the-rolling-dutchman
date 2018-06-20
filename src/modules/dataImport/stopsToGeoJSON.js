@@ -1,5 +1,5 @@
-/* eslint no-await-in-loop: 0 */  // --> OFF
-const gtfs = require('../../../node-gtfs');
+/* eslint no-await-in-loop: 0 */ // --> OFF
+const gtfs = require('gtfs');
 const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs');

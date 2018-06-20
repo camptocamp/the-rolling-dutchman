@@ -1,13 +1,10 @@
 /* eslint-disable arrow-body-style */
 import {
-  parseHHMM,
+  pointToGeoJSONFeature,
   getMomentFromHHMM,
   flattenArray,
-} from './utils';
-import {
-  pointToGeoJSONFeature,
   featuresToGeoJSON,
-} from '../geojson-utils';
+} from './utils';
 
 const moment = require('moment');
 const turf = require('@turf/turf');

@@ -17,4 +17,22 @@ function flattenArray(array) {
   return [].concat(...array);
 }
 
-export { parseHHMM, getMomentFromHHMM, flattenArray };
+function pointToGeoJSONFeature(point) {
+  return {
+    type: 'Feature',
+    properties: {},
+    geometry: {
+      type: 'Point',
+      coordinates: point,
+    },
+  };
+}
+
+function featuresToGeoJSON(features) {
+  return {
+    type: 'FeatureCollection',
+    features,
+  };
+}
+
+export { parseHHMM, getMomentFromHHMM, flattenArray, pointToGeoJSONFeature, featuresToGeoJSON };
