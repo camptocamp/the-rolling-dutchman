@@ -6,7 +6,8 @@
   "build": "babel src -d dist --source-maps",
   "scripts": {
     "start": "webpack-dev-server --mode development -d --open",
-    "test": "mocha --compilers js:babel-core/register"
+    "test": "mocha --compilers js:babel-core/register",
+    "lint": "eslint \"./src/**/*.js\""
   },
   "author": "",
   "license": "ISC",

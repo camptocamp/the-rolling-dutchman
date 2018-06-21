@@ -1,4 +1,5 @@
 import { Enum } from 'enumify';
+
 const gtfs = require('gtfs');
 const moment = require('moment');
 
@@ -53,15 +54,6 @@ async function getServicesActiveOnWeekday(weekDay) {
   return gtfs.getCalendars(weekDayToFilter(weekDay), projection);
 }
 
-// TODO write unit tests for this function
-function dateStringToDate(stringDate) {
-  const year = parseInt(stringDate.toString().substring(0, 4), 10);
-  // 0 -> January
-  const month = parseInt(stringDate.toString().substring(4, 6), 10) - 1;
-  const day = parseInt(stringDate.toString().substring(6, 8), 10);
-  return new Date(year, month, day);
-}
-
 exports.getServicesActiveToday = async () => {
   const date = moment();
   const day = date.day();
@@ -71,7 +63,7 @@ exports.getServicesActiveToday = async () => {
     const startDate = moment(service.start_date.toString());
     const endDate = moment(service.end_date.toString());
     endDate.add(1, 'day');
-    // to include the last day 
+    // to include the last day
     return date.isBetween(startDate, endDate);
   });
 };

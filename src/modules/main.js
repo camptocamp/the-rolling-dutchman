@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { featuresToGeoJSON } from './geojson-utils';
 
 const cutting_shapes = require('./cutting_shapes');
@@ -7,18 +8,18 @@ const gtfs_utils = require('./gtfs-utils');
 const mongoose = require('mongoose');
 const fs = require('fs');
 
-function allProgress(proms, progress_cb) {
+function allProgress(proms, progressCallBack) {
   let d = 0;
-  progress_cb(0);
+  progressCallBack(0);
   proms.forEach((p) => {
     p.then(
       () => {
         d++;
-        progress_cb((d * 100) / proms.length);
+        progressCallBack((d * 100) / proms.length);
       },
       () => {
         d++;
-        progress_cb((d * 100) / proms.length);
+        progressCallBack((d * 100) / proms.length);
       },
     );
   });
@@ -80,7 +81,7 @@ async function main() {
   const shapes = await gtfs.getShapes(Object.assign(
     // {shape_id: {$in: ["11-WLB-j17-1.1.H", "11-WLB-j17-1.10.R"] }},
     gtfs_utils.queryWithAgencyKey));
-  //const filteredShapes = shapes.filter((shape, index) => (index % 10) === 0);
+  // const filteredShapes = shapes.filter((shape, index) => (index % 10) === 0);
   const servicesIds = servicesActives.map(service => service.service_id);
   const proms = getFragmentShapes(shapes, servicesIds);
   allProgress(proms, p => console.log(`% Done = ${p.toFixed(2)}`));

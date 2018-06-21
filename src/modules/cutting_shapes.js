@@ -1,8 +1,8 @@
-import { min } from 'moment';
+const MAXIMUM_TRAVEL_HOURS = 20;
 
-const _ = require('lodash');
-const moment = require('moment');
-
+function mod(n, m) {
+  return ((n % m) + m) % m;
+}
 
 function dropSeconds(hhmmss) {
   const time = hhmmss.split(':');
@@ -20,18 +20,24 @@ function toMinutes(hour, minutes) {
 function differenceInMinutes(start, end) {
   const firstHoursMinutes = dropSeconds(start).split(':');
   const secondHoursMinutes = dropSeconds(end).split(':');
-  const minutesDifferences = toMinutes(secondHoursMinutes[0], secondHoursMinutes[1]) -
-  toMinutes(firstHoursMinutes[0], firstHoursMinutes[1]);
-  if (minutesDifferences < 0) {
-    throw Error(`difference is negative between: ${start} and ${end}`);
+  const firstMinutes = parseInt(firstHoursMinutes[1], 10);
+  const firstHours = parseInt(firstHoursMinutes[0], 10);
+  const secondMinutes = parseInt(secondHoursMinutes[1], 10);
+  const secondHours = parseInt(secondHoursMinutes[0], 10);
+  let minutesDifferences = toMinutes(secondHours, secondMinutes) -
+  toMinutes(firstHours, firstMinutes);
+  minutesDifferences = mod(minutesDifferences, 24 * 60);
+  if (minutesDifferences > 20 * 60) {
+    throw Error(`A travel seems to take more than ${MAXIMUM_TRAVEL_HOURS} hours,
+    are you sure that startTime: ${start} and endTime ${end} are not inverted ?`);
   }
   return minutesDifferences;
 }
 
 class FragmentedTrip {
-  constructor(start_time, end_time) {
-    this.startTime = start_time;
-    this.endTime = end_time;
+  constructor(startTime, endTime) {
+    this.startTime = startTime;
+    this.endTime = endTime;
   }
   toJSON() {
     return {
@@ -116,7 +122,7 @@ function createFragmentsForStopTimes(fractionedShape, shapeDists, stopTimes) {
     const key = makeKey(acc, nextIndex);
     const fragmentedTrip = new FragmentedTrip(
       stopTimes[index].departure_time,
-      stopTimes[index + 1].departure_time,
+      stopTimes[index + 1].arrival_time,
     );
     acc = nextIndex;
     fractionedShape.addTrip(key, fragmentedTrip);
@@ -142,4 +148,8 @@ function fractionShape(shapePoints, stopTimesList) {
   return fractionedShape;
 }
 
-export { fractionShape, makeKey, createFragmentsForStopTimes, FragmentedTrip, FractionedShape };
+export {
+  fractionShape, makeKey, createFragmentsForStopTimes,
+  FragmentedTrip, FractionedShape, differenceInMinutes,
+  toMinutes, dropSeconds,
+};
