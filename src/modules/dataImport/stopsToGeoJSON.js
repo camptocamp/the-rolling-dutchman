@@ -1,27 +1,15 @@
 /* eslint-disable no-await-in-loop */
-const gtfs = require('gtfs');
+
+import { getDirectoryName, getOutputFileOfBatch } from '../filesIO/utils';
+import { getSelectorOnAgencyKeys } from './gtfsUtils';
+
+const gtfs = require('../../../node-gtfs');
 const mongoose = require('mongoose');
-const path = require('path');
 const fs = require('fs');
 const mkdirp = require('mkdirp');
 
 const batchSize = 1000;
 
-function getDirectoryName(configPath, outputPath) {
-  return `${path.dirname(configPath)}/${path.dirname(outputPath)}`;
-}
-
-function getFileNameExtension(outputPath) {
-  return `${path.extname(outputPath)}`;
-}
-
-function getFileNameWithoutExtension(outputPath) {
-  return path.basename(outputPath, getFileNameExtension(outputPath));
-}
-
-function getOutputFileOfBatch(configPath, outputPath, batchNumber) {
-  return `${getDirectoryName(configPath, outputPath)}/${getFileNameWithoutExtension(outputPath)}${batchNumber}${getFileNameExtension(outputPath)}`;
-}
 
 async function batch(stopIds, agencyKeys) {
   return gtfs.getStopsAsGeoJSON({
@@ -40,11 +28,7 @@ async function main() {
   mongoose.connect(config.mongoUrl);
   const agencyKeys = config.agencies.map(agency => agency.agency_key);
   let stopIds = await gtfs.getStops(
-    {
-      agency_key: {
-        $in: agencyKeys,
-      },
-    },
+    getSelectorOnAgencyKeys(agencyKeys),
     {
       stop_id: 1,
     },

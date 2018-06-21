@@ -1,6 +1,6 @@
 import { Enum } from 'enumify';
 
-const gtfs = require('gtfs');
+const gtfs = require('../../../node-gtfs');
 const moment = require('moment');
 
 moment().format();
@@ -51,19 +51,34 @@ async function getServicesActiveOnWeekday(weekDay) {
     start_date: 1,
     end_date: 1,
   };
-  return gtfs.getCalendars(weekDayToFilter(weekDay), projection);
+  const filter = weekDayToFilter(weekDay);
+  return gtfs.getCalendars(filter, projection);
 }
 
-exports.getServicesActiveToday = async () => {
+exports.getIdsOfServicesActiveToday = async () => {
   const date = moment();
   const day = date.day();
   const weekDay = intToWeekday(day);
   const services = await getServicesActiveOnWeekday(weekDay);
-  return services.filter((service) => {
+  const servicesActives = services.filter((service) => {
     const startDate = moment(service.start_date.toString());
     const endDate = moment(service.end_date.toString());
     endDate.add(1, 'day');
     // to include the last day
     return date.isBetween(startDate, endDate);
   });
+  const todayString = date.format('YYYYMMDD');
+  const serviceExceptions = await gtfs.getCalendarDates({ date: todayString });
+  const servicesIds = servicesActives.map(service => service.service_id);
+  serviceExceptions.forEach((service) => {
+    if (service.exception_type === 1) {
+      servicesIds.push(service.service_id);
+    } else if (service.exception_type === 2) {
+      const indexToRemove = servicesIds.indexOf(service.service_id);
+      if (indexToRemove !== -1) {
+        servicesIds.splice(indexToRemove, 1);
+      }
+    }
+  });
+  return servicesIds;
 };

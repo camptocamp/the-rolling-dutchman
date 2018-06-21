@@ -104,33 +104,45 @@ function removeDuplicatesInSorted(a) {
 // assume that both begin to zero
 // warning, potentially bugged function
 function splitShapeDistByStopTimes(shapeDistList, stopTimes) {
-  const shapeDistFiltered = removeDuplicatesInSorted(shapeDistList);
   const splittedList = [];
-  let beginIndex = 0;
+  let beginIndex = shapeDistList.indexOf(stopTimes[0].shape_dist_traveled);
+  if (beginIndex === -1) {
+    console.log('blem');
+  }
   stopTimes.slice(1, stopTimes.length).forEach((stopTime) => {
-    const lastIndex = shapeDistFiltered.indexOf(stopTime.shape_dist_traveled);
-    splittedList.push(shapeDistFiltered.slice(beginIndex, lastIndex + 1));
+    const lastIndex = shapeDistList.indexOf(stopTime.shape_dist_traveled);
+    splittedList.push(shapeDistList.slice(beginIndex, lastIndex + 1));
     beginIndex = lastIndex;
   });
   return splittedList;
 }
 
 function createFragmentsForStopTimes(fractionedShape, shapeDists, stopTimes) {
-  if (shapeDists[0] !== stopTimes[0].shape_dist_traveled) {
-    throw Error(`Expecting the shape_dist_traveled for both list to be zero for both but are: ${shapeDists[0]
-    } and: ${stopTimes[0].shape_dist_traveled}`);
-  }
-  const splittedShape = splitShapeDistByStopTimes(shapeDists, stopTimes);
+  const stopTimesSorted = stopTimes.sort((a, b) => a.shape_dist_traveled - b.shape_dist_traveled);
+  const splittedShape = splitShapeDistByStopTimes(shapeDists, stopTimesSorted);
   splittedShape.forEach((fragment, index) => {
-    const key = makeKey(fragment[0], fragment[fragment.length - 1]);
+    const key = makeKey(
+      shapeDists.indexOf(fragment[0]),
+      shapeDists.indexOf(fragment[fragment.length - 1]),
+    );
     const fragmentedTrip = new FragmentedTrip(
-      stopTimes[index].departure_time,
-      stopTimes[index + 1].arrival_time,
+      stopTimesSorted[index].departure_time,
+      stopTimesSorted[index + 1].arrival_time,
     );
     fractionedShape.addTrip(key, fragmentedTrip);
   });
 }
 
+function sortShape(shapePoints) {
+  shapePoints.sort((a, b) => a.shape_dist_traveled - b.shape_dist_traveled);
+}
+
+function removeDuplicatesInSortedShape(shapePoints) {
+  return shapePoints.filter((item, pos, array) => {
+    const isFirstPos = !pos;
+    return (isFirstPos) || (item.shape_dist_traveled !== array[pos - 1].shape_dist_traveled);
+  });
+}
 /*
 *  tripId have a unique shapeId
 *  a list of stopTimes defining the service
@@ -142,8 +154,10 @@ function createFragmentsForStopTimes(fractionedShape, shapeDists, stopTimes) {
 */
 // returns a fractionShape with empty dictionary if stopTimesList is emptym can be a problem
 function fractionShape(shapePoints, stopTimesList) {
-  const fractionedShape = new FractionedShape(shapePoints);
-  const shapeDists = shapePoints.map(shapePoint => shapePoint.shape_dist_traveled);
+  sortShape(shapePoints);
+  const shapePointsFiltered = removeDuplicatesInSortedShape(shapePoints);
+  const fractionedShape = new FractionedShape(shapePointsFiltered);
+  const shapeDists = shapePointsFiltered.map(shapePoint => shapePoint.shape_dist_traveled);
   stopTimesList.forEach((stopTimes) => {
     createFragmentsForStopTimes(fractionedShape, shapeDists, stopTimes);
   });

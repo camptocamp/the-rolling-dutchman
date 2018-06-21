@@ -1,0 +1,10 @@
+{
+  "outputPath" : "../output/Netherlands/geojson/schedule.geojson",
+  "mongoUrl": "mongodb://localhost:27017/Netherlands",
+  "agencies": [
+    {
+      "agency_key": "Netherlands_gtfs",
+      "path": "./data/Netherlands/gtfs.zip"
+    }
+  ]
+}
