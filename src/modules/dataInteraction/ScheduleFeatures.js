@@ -1,4 +1,6 @@
 /* eslint-disable arrow-body-style */
+import moment from 'moment';
+import * as turf from '@turf/turf';
 import {
   pointToGeoJSONFeature,
   getMomentFromHHMM,
@@ -6,8 +8,6 @@ import {
   featuresToGeoJSON,
 } from './utils';
 
-const moment = require('moment');
-const turf = require('@turf/turf');
 
 const animatedBusesSourceId = 'buses';
 const animatedBusesLayerId = 'busLayer';
@@ -86,7 +86,7 @@ function getPointsFromActiveTrip(activeTrip, timeStamp) {
 }
 
 
-function animateBuses(scheduleFeatures, map, counter) {
+function animateBuses(scheduleFeatures, map) {
   const timeStampOfFrame = moment();
   const activeTrips = scheduleFeatures.getActiveTrips(timeStampOfFrame);
   const pointsFeatureNotFlatten = activeTrips.map((activeTrip) => {
@@ -95,10 +95,10 @@ function animateBuses(scheduleFeatures, map, counter) {
   const pointsFeature = flattenArray(pointsFeatureNotFlatten);
   const geojson = featuresToGeoJSON(pointsFeature);
   map.getSource(animatedBusesSourceId).setData(geojson);
-  requestAnimationFrame(() => animateBuses(scheduleFeatures, map, counter + 1));
+  requestAnimationFrame(() => animateBuses(scheduleFeatures, map));
 }
 
-function initSources(map, counter) {
+function initSources(map) {
   map.addSource(animatedBusesSourceId, {
     type: 'geojson',
     data: featuresToGeoJSON([pointToGeoJSONFeature([0, 0])]),
@@ -115,6 +115,6 @@ function initSources(map, counter) {
   const scheduleFeatures = new ScheduleFeatures(map);
   scheduleFeatures.update();
   map.on('move', () => scheduleFeatures.update());
-  animateBuses(scheduleFeatures, map, counter);
+  animateBuses(scheduleFeatures, map);
 }
 export { initSources };

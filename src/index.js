@@ -10,4 +10,4 @@ const map = new mapboxgl.Map({
 });
 map.showTileBoundaries = true;
 activateClickCallback(map);
-map.on('load', () => initSources(map, 0));
+map.on('load', () => initSources(map));

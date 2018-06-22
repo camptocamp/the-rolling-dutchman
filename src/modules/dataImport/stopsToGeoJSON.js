@@ -1,4 +1,4 @@
-/* eslint no-await-in-loop: 0 */ // --> OFF
+/* eslint-disable no-await-in-loop */
 const gtfs = require('gtfs');
 const mongoose = require('mongoose');
 const path = require('path');
@@ -35,10 +35,8 @@ async function batch(stopIds, agencyKeys) {
 }
 
 async function main() {
-  console.log('hey');
   const configPath = process.argv[2];
   const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-  console.log(JSON.stringify(config));
   mongoose.connect(config.mongoUrl);
   const agencyKeys = config.agencies.map(agency => agency.agency_key);
   let stopIds = await gtfs.getStops(
@@ -66,6 +64,7 @@ async function main() {
     batchNumber += 1;
     console.log(`${batchNumber * batchSize} stops written`);
   }
+  console.log(`stops written in directory ${getDirectoryName(configPath, config.outputPath)}`);
   mongoose.connection.close();
 }
 
