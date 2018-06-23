@@ -1,6 +1,6 @@
 import { Enum } from 'enumify';
 
-const gtfs = require('../../../node-gtfs');
+const gtfs = require('gtfs');
 const moment = require('moment');
 
 moment().format();

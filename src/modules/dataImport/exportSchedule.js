@@ -5,7 +5,7 @@ import { getSelectorOnAgencyKeys } from './gtfsUtils';
 
 const cuttingShapes = require('./cuttingShapes');
 const servicesUtils = require('./servicesUtils');
-const gtfs = require('../../../node-gtfs');
+const gtfs = require('gtfs');
 const mongoose = require('mongoose');
 const fs = require('fs');
 const mkdirp = require('mkdirp');

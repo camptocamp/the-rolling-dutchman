@@ -3,7 +3,7 @@
 import { getDirectoryName, getOutputFileOfBatch } from '../filesIO/utils';
 import { getSelectorOnAgencyKeys } from './gtfsUtils';
 
-const gtfs = require('../../../node-gtfs');
+const gtfs = require('gtfs');
 const mongoose = require('mongoose');
 const fs = require('fs');
 const mkdirp = require('mkdirp');
