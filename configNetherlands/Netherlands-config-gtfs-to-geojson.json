@@ -1,0 +1,13 @@
+{
+  "mongoUrl": "mongodb://localhost:27017/Wien",
+  "agencies": [
+    {
+      "agency_key": "Netherlands_gtfs",
+      "path": "./data/Netherlands/gtfs.zip"
+    }
+  ],
+  "includeStops": false,
+  "outputType": "agency",
+  "coordinatePrecision": 5,
+  "zipOutput": false
+}

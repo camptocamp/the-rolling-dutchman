@@ -12,12 +12,15 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@mapbox/geojson-merge": "^1.0.2",
+    "@turf/turf": "^5.1.6",
     "babel-polyfill": "^6.26.0",
     "enumify": "^1.0.4",
     "gtfs": "^1.6.2",
     "gtfs-to-geojson": "^0.4.8",
     "lodash": "^4.17.10",
     "mapbox-gl": "^0.45.0",
+    "mkdirp": "^0.5.1",
     "moment": "^2.22.1",
     "mongoose": "^5.0.16"
   },

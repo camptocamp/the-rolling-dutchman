@@ -1,24 +1,70 @@
+/* eslint-disable no-await-in-loop */
 const gtfs = require('gtfs');
 const mongoose = require('mongoose');
-const config = require('../../../config-import-stops.json');
+const path = require('path');
 const fs = require('fs');
+const mkdirp = require('mkdirp');
 
-mongoose.connect(config.mongoUrl);
-async function main() {
-  const prefixPath = '../../../';
-  const agencyKeys = config.agencies.map(agency => agency.agency_key);
-  const stops = await gtfs.getStopsAsGeoJSON({
+const batchSize = 1000;
+
+function getDirectoryName(configPath, outputPath) {
+  return `${path.dirname(configPath)}/${path.dirname(outputPath)}`;
+}
+
+function getFileNameExtension(outputPath) {
+  return `${path.extname(outputPath)}`;
+}
+
+function getFileNameWithoutExtension(outputPath) {
+  return path.basename(outputPath, getFileNameExtension(outputPath));
+}
+
+function getOutputFileOfBatch(configPath, outputPath, batchNumber) {
+  return `${getDirectoryName(configPath, outputPath)}/${getFileNameWithoutExtension(outputPath)}${batchNumber}${getFileNameExtension(outputPath)}`;
+}
+
+async function batch(stopIds, agencyKeys) {
+  return gtfs.getStopsAsGeoJSON({
     agency_key: {
       $in: agencyKeys,
     },
+    stop_id: {
+      $in: stopIds,
+    },
   });
-  try {
-    fs.writeFile(`${prefixPath}${config.outputPath}`, JSON.stringify(stops));
-    console.log('write successful');
-  } catch (error) {
-    console.error('could not write file');
-    console.error(error.message);
+}
+
+async function main() {
+  const configPath = process.argv[2];
+  const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+  mongoose.connect(config.mongoUrl);
+  const agencyKeys = config.agencies.map(agency => agency.agency_key);
+  let stopIds = await gtfs.getStops(
+    {
+      agency_key: {
+        $in: agencyKeys,
+      },
+    },
+    {
+      stop_id: 1,
+    },
+  );
+  console.log(`${stopIds.length} stops found, going by batch of ${batchSize}`);
+
+  let batchNumber = 0;
+  mkdirp(getDirectoryName(configPath, config.outputPath));
+  while (stopIds.length > 0) {
+    const remaining = stopIds.splice(batchSize);
+    const stops = await batch(stopIds.map(stopIdObj => stopIdObj.stop_id), agencyKeys);
+    await fs.writeFile(
+      getOutputFileOfBatch(configPath, config.outputPath, batchNumber),
+      JSON.stringify(stops),
+    );
+    stopIds = remaining;
+    batchNumber += 1;
+    console.log(`${batchNumber * batchSize} stops written`);
   }
+  console.log(`stops written in directory ${getDirectoryName(configPath, config.outputPath)}`);
   mongoose.connection.close();
 }
 
