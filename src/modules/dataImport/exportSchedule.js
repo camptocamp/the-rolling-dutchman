@@ -1,5 +1,5 @@
 /* eslint-disable no-await-in-loop */
-import { featuresToGeoJSON } from '../geojson-utils';
+import { featuresToGeoJSON } from '../dataInteraction/utils';
 import { getDirectoryName, getOutputFileOfBatch } from '../filesIO/utils';
 import { getSelectorOnAgencyKeys } from './gtfsUtils';
 
@@ -71,10 +71,11 @@ function getFragmentShapes(shapes, servicesIds, agencyKeys) {
     }
   });
 }
-
+// Function useful for debugging -> smaller subset makes exporting to GeoJSON faster
+/*
 function filterByFactor(array, factor) {
   return array.filter((elem, index) => (index % factor) === 0);
-}
+} */
 
 async function getScheduleGeoJSONFromShapes(shapesIds, servicesIds, agencyKeys) {
   const shapes = await gtfs.getShapes({ shape_id: { $in: shapesIds } });
