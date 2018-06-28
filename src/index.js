@@ -1,5 +1,5 @@
 import mapboxgl from 'mapbox-gl';
-import { activateClickCallback } from './modules/dataInteraction/debug';
+import { activateClickCallback, hoverMouse } from './modules/dataInteraction/debug';
 import { initSources } from './modules/dataInteraction/ScheduleFeatures';
 
 const map = new mapboxgl.Map({
@@ -10,4 +10,5 @@ const map = new mapboxgl.Map({
 });
 map.showTileBoundaries = true;
 activateClickCallback(map);
+hoverMouse(map);
 map.on('load', () => initSources(map));

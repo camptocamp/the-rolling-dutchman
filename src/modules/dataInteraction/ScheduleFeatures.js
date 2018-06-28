@@ -30,52 +30,6 @@ function minutesInMilliseconds(minutes) {
   return minutes * 60 * 1000;
 }
 
-function millisecondsInMinutes(milliseconds) {
-  return (milliseconds / 60) / 1000;
-}
-
-class ScheduleFeature {
-  constructor(geojson, referenceDate, millisecondsTimeStamp) {
-    if (typeof geojson === 'string') {
-      this.geojson = JSON.parse(geojson);
-    } else {
-      this.geojson = geojson;
-    }
-    this.geojson.properties.trips = JSON.parse(this.geojson.properties.trips);
-    this.geojson.properties.modifiedTrips = this.geojson.properties.trips
-      .map((trip) => {
-        const begin = getPerformanceLikeFromHHMM(
-          trip.startTime,
-          referenceDate,
-          millisecondsTimeStamp,
-        );
-        return { begin, end: begin + minutesInMilliseconds(trip.travelTime) };
-      });
-  }
-  getGeoJSON() {
-    return this.geojson;
-  }
-
-  getTrips() {
-    return this.geojson.properties.modifiedTrips;
-  }
-  getCoordinates() {
-    return this.geojson.geometry.coordinates;
-  }
-  getActiveTripsWithCoordinates(timeStamp) {
-    const now = timeStamp;
-    const trips = this.getTrips().filter((trip) => {
-      const { begin } = trip;
-      const { end } = trip;
-      const hackyCondition = millisecondsInMinutes(end - begin) < 10;
-      return begin < now && end > now && hackyCondition;
-    });
-    return {
-      trips,
-      coordinates: this.getCoordinates(),
-    };
-  }
-}
 function GeoJSONToCrossFilterFacts(geojson, referenceDate, millisecondsTimeStamp) {
   // No idea why but query rendered features deliver trips as strings and not array
   // even though it is an array in the original geojson
@@ -90,6 +44,7 @@ function GeoJSONToCrossFilterFacts(geojson, referenceDate, millisecondsTimeStamp
       trip,
       coordinates: geojson.geometry.coordinates,
       begin,
+      properties: geojson.properties,
       end: begin + minutesInMilliseconds(trip.travelTime),
     };
   });
@@ -128,7 +83,6 @@ class ScheduleFeatures {
   }
 }
 
-
 function getPointFromActiveTrip(activeTrip, timeStamp) {
   if (activeTrip.length === 0) {
     return [];
@@ -141,14 +95,16 @@ function getPointFromActiveTrip(activeTrip, timeStamp) {
   try {
     distance = turf.distance(coords[0], coords[coords.length - 1], options);
   } catch (error) {
-    console.log('issue to be considered in priority in coords of geojson file');
+    // On less than 10% of the shapes the coords are unvalid
+    // there is a level of nesting in excess
     coords = flattenArray(coords);
     distance = turf.distance(coords[0], coords[coords.length - 1], options);
   }
   const lineString = turf.lineString(coords);
   const millisecondsPassed = timeStamp - activeTrip.begin;
   const fractionTraveled = millisecondsPassed / (activeTrip.end - activeTrip.begin);
-  return turf.along(lineString, distance * fractionTraveled, options);
+  const geojsonPoint = turf.along(lineString, distance * fractionTraveled, options);
+  return Object.assign(geojsonPoint, { properties: activeTrip.properties });
 }
 
 
@@ -181,4 +137,4 @@ function initSources(map) {
   map.on('moveend', () => scheduleFeatures.update());
   animateBuses(scheduleFeatures, map, performance.now());
 }
-export { initSources };
+export { initSources, animatedBusesLayerId };
