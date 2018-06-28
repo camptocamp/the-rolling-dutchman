@@ -1,4 +1,6 @@
-const moment = require('moment');
+import setHours from 'date-fns/set_hours';
+import setMinutes from 'date-fns/set_minutes';
+import setSeconds from 'date-fns/set_seconds';
 
 function parseHHMM(HHMM, delimiter) {
   if (delimiter === undefined) {
@@ -8,9 +10,9 @@ function parseHHMM(HHMM, delimiter) {
   return array.map(element => parseInt(element, 10));
 }
 
-function getMomentFromHHMM(HHMM, timeStamp, delimiter) {
+function getDateFromHHMM(HHMM, timeStamp, delimiter) {
   const hourMinutes = parseHHMM(HHMM, delimiter);
-  return moment(timeStamp).hours(hourMinutes[0]).minutes(hourMinutes[1]).seconds(0);
+  return setHours(setMinutes(setSeconds(timeStamp, 0), hourMinutes[1]), hourMinutes[0]);
 }
 
 function flattenArray(array) {
@@ -35,4 +37,4 @@ function featuresToGeoJSON(features) {
   };
 }
 
-export { parseHHMM, getMomentFromHHMM, flattenArray, pointToGeoJSONFeature, featuresToGeoJSON };
+export { parseHHMM, getDateFromHHMM, flattenArray, pointToGeoJSONFeature, featuresToGeoJSON };
