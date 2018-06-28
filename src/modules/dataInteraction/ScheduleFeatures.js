@@ -1,6 +1,7 @@
 /* eslint-disable arrow-body-style */
 import differenceInMilliseconds from 'date-fns/difference_in_milliseconds';
 import * as turf from '@turf/turf';
+import crossfilter from 'crossfilter2';
 import {
   pointToGeoJSONFeature,
   getDateFromHHMM,
@@ -51,6 +52,9 @@ class ScheduleFeature {
         return { begin, end: begin + minutesInMilliseconds(trip.travelTime) };
       });
   }
+  getGeoJSON() {
+    return this.geojson;
+  }
 
   getTrips() {
     return this.geojson.properties.modifiedTrips;
@@ -72,6 +76,24 @@ class ScheduleFeature {
     };
   }
 }
+function GeoJSONToCrossFilterFacts(geojson, referenceDate, millisecondsTimeStamp) {
+  // No idea why but query rendered features deliver trips as strings and not array
+  // even though it is an array in the original geojson
+  const trips = JSON.parse(geojson.properties.trips);
+  return trips.map((trip) => {
+    const begin = getPerformanceLikeFromHHMM(
+      trip.startTime,
+      referenceDate,
+      millisecondsTimeStamp,
+    );
+    return {
+      trip,
+      coordinates: geojson.geometry.coordinates,
+      begin,
+      end: begin + minutesInMilliseconds(trip.travelTime),
+    };
+  });
+}
 
 class ScheduleFeatures {
   constructor(map) {
@@ -80,17 +102,26 @@ class ScheduleFeatures {
   update() {
     this.referenceDate = new Date();
     this.millisecondsTimeStamp = performance.now();
-    this.features = this.map.queryRenderedFeatures(undefined, {
+    const features = this.map.queryRenderedFeatures(undefined, {
       layers: [layerWithScheduleId],
-    }).map(geojson => new ScheduleFeature(geojson, this.referenceDate, this.millisecondsTimeStamp));
+    });
+    const crossfilterFactArray = features.map(feature =>
+      GeoJSONToCrossFilterFacts(feature, this.referenceDate, this.millisecondsTimeStamp));
+    const crossfilterFacts = flattenArray(crossfilterFactArray);
+    this.schedule = crossfilter(crossfilterFacts);
+    this.beginDimension = this.schedule.dimension(d => d.begin);
+    this.endDimension = this.schedule.dimension(d => d.end);
     this.counter = 0;
+  }
+  updateFilters(timeStamp) {
+    this.beginDimension.filterFunction(d => d <= timeStamp);
+    this.endDimension.filterFunction(d => d >= timeStamp);
   }
   getActiveTrips(timeStamp) {
     if (this.activeTrips === undefined || this.counter === 60) {
+      this.updateFilters(timeStamp);
       this.counter = 0;
-      this.activeTrips = this.features.map(geojsonFeature => geojsonFeature
-        .getActiveTripsWithCoordinates(timeStamp));
-      this.activeTrips = this.activeTrips.filter(activeTrip => activeTrip.trips.length > 0);
+      this.activeTrips = this.schedule.allFiltered();
     }
     this.counter += 1;
     return this.activeTrips;
@@ -98,7 +129,7 @@ class ScheduleFeatures {
 }
 
 
-function getPointsFromActiveTrip(activeTrip, timeStamp) {
+function getPointFromActiveTrip(activeTrip, timeStamp) {
   if (activeTrip.length === 0) {
     return [];
   }
@@ -110,25 +141,23 @@ function getPointsFromActiveTrip(activeTrip, timeStamp) {
   try {
     distance = turf.distance(coords[0], coords[coords.length - 1], options);
   } catch (error) {
+    console.log('issue to be considered in priority in coords of geojson file');
     coords = flattenArray(coords);
     distance = turf.distance(coords[0], coords[coords.length - 1], options);
   }
   const lineString = turf.lineString(coords);
-  return activeTrip.trips.map((trip) => {
-    const millisecondsPassed = timeStamp - trip.begin;
-    const fractionTraveled = millisecondsPassed / (trip.end - trip.begin);
-    return turf.along(lineString, distance * fractionTraveled, options);
-  });
+  const millisecondsPassed = timeStamp - activeTrip.begin;
+  const fractionTraveled = millisecondsPassed / (activeTrip.end - activeTrip.begin);
+  return turf.along(lineString, distance * fractionTraveled, options);
 }
 
 
 function animateBuses(scheduleFeatures, map, timeStamp) {
   const activeTrips = scheduleFeatures.getActiveTrips(timeStamp);
-  const pointsFeatureNotFlatten = activeTrips.map((activeTrip) => {
-    return getPointsFromActiveTrip(activeTrip, timeStamp);
+  const pointFeatures = activeTrips.map((activeTrip) => {
+    return getPointFromActiveTrip(activeTrip, timeStamp);
   });
-  const pointsFeature = flattenArray(pointsFeatureNotFlatten);
-  const geojson = featuresToGeoJSON(pointsFeature);
+  const geojson = featuresToGeoJSON(pointFeatures);
   map.getSource(animatedBusesSourceId).setData(geojson);
   requestAnimationFrame(timestamp => animateBuses(scheduleFeatures, map, timestamp));
 }
