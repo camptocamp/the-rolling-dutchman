@@ -13,15 +13,15 @@ const animatedBusesSourceId = 'buses';
 const animatedBusesLayerId = 'busLayer';
 const layerWithScheduleId = 'shapes_fragmented';
 
-function getPerformanceLikeFromDate(date, referenceDate, referencePerformance) {
-  return differenceInMilliseconds(date, referenceDate) + referencePerformance;
+function getPerformanceLikeFromDate(date, referenceDate, millisecondsTimeStamp) {
+  return differenceInMilliseconds(date, referenceDate) + millisecondsTimeStamp;
 }
 
-function getPerformanceLikeFromHHMM(HHMM, referenceDate, referencePerformance) {
+function getPerformanceLikeFromHHMM(HHMM, referenceDate, millisecondsTimeStamp) {
   return getPerformanceLikeFromDate(
     getDateFromHHMM(HHMM, referenceDate),
     referenceDate,
-    referencePerformance,
+    millisecondsTimeStamp,
   );
 }
 
@@ -34,7 +34,7 @@ function millisecondsInMinutes(milliseconds) {
 }
 
 class ScheduleFeature {
-  constructor(geojson, referenceDate, referencePerformance) {
+  constructor(geojson, referenceDate, millisecondsTimeStamp) {
     if (typeof geojson === 'string') {
       this.geojson = JSON.parse(geojson);
     } else {
@@ -46,7 +46,7 @@ class ScheduleFeature {
         const begin = getPerformanceLikeFromHHMM(
           trip.startTime,
           referenceDate,
-          referencePerformance,
+          millisecondsTimeStamp,
         );
         return { begin, end: begin + minutesInMilliseconds(trip.travelTime) };
       });
@@ -79,10 +79,10 @@ class ScheduleFeatures {
   }
   update() {
     this.referenceDate = new Date();
-    this.referencePerformance = performance.now();
+    this.millisecondsTimeStamp = performance.now();
     this.features = this.map.queryRenderedFeatures(undefined, {
       layers: [layerWithScheduleId],
-    }).map(geojson => new ScheduleFeature(geojson, this.referenceDate, this.referencePerformance));
+    }).map(geojson => new ScheduleFeature(geojson, this.referenceDate, this.millisecondsTimeStamp));
     this.counter = 0;
   }
   getActiveTrips(timeStamp) {
