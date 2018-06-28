@@ -27,7 +27,7 @@ function differenceInMinutes(start, end) {
   let minutesDifferences = toMinutes(secondHours, secondMinutes) -
   toMinutes(firstHours, firstMinutes);
   minutesDifferences = mod(minutesDifferences, 24 * 60);
-  if (minutesDifferences > 20 * 60) {
+  if (minutesDifferences > MAXIMUM_TRAVEL_HOURS * 60) {
     throw Error(`A travel seems to take more than ${MAXIMUM_TRAVEL_HOURS} hours,
     are you sure that startTime: ${start} and endTime ${end} are not inverted ?`);
   }
