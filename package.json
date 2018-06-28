@@ -20,7 +20,7 @@
     "babel-polyfill": "^6.26.0",
     "date-fns": "^1.29.0",
     "enumify": "^1.0.4",
-    "gtfs": "github:Kalaboum/node-gtfs#master",
+    "gtfs": "github:Kalaboum/node-gtfs#ecff656bd5026c9364e3a4b96b5dbbdd48a71be2",
     "gtfs-to-geojson": "^0.4.8",
     "lodash": "^4.17.10",
     "mapbox-gl": "^0.45.0",

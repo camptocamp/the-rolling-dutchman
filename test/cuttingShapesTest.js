@@ -2,7 +2,7 @@
 import 'babel-polyfill'
 import {makeKey, createFragmentsForStopTimes, FractionedShape,
    FragmentedTrip, differenceInMinutes, 
-   toMinutes, dropSeconds, removeDuplicatesInSorted} from '../src/modules/dataImport/cuttingShapes';
+   toMinutes, dropSeconds, removeDuplicatesInSortedShape} from '../src/modules/dataImport/cuttingShapes';
 const assert = require('assert');
 
 describe('make key', () => {
@@ -90,9 +90,19 @@ describe('the method addTrip', () => {
   })
 })
 
+function arrayIntToArrayShapeDistTraveled(array) {
+  return array.map(integer => {
+    return { shape_dist_traveled: integer }
+  });
+}
+
 describe('the function removeDuplicatesInSorted', () => {
   const array = [1, 1, 2, 2, 2, 3, 3, 4, 4];
+  const newArray = arrayIntToArrayShapeDistTraveled(array);
   it('should filter duplicates in an array', () => {
-    assert.deepEqual(removeDuplicatesInSorted(array), [1, 2, 3, 4]);
+    assert.deepEqual(
+      removeDuplicatesInSortedShape(newArray), 
+      arrayIntToArrayShapeDistTraveled([1, 2, 3, 4])
+    );
   })
 })

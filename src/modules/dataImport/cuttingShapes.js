@@ -97,10 +97,6 @@ function makeKey(firstIndex, secondIndex) {
   return `${firstIndex.toString()},${secondIndex.toString()}`;
 }
 
-function removeDuplicatesInSorted(a) {
-  return a.filter((item, pos, ary) => (!pos) || (item !== ary[pos - 1]));
-}
-
 // assume that both begin to zero
 // warning, potentially bugged function
 function splitShapeDistByStopTimes(shapeDistList, stopTimes) {
@@ -167,5 +163,5 @@ function fractionShape(shapePoints, stopTimesList) {
 export {
   fractionShape, makeKey, createFragmentsForStopTimes,
   FragmentedTrip, FractionedShape, differenceInMinutes,
-  toMinutes, dropSeconds, removeDuplicatesInSorted,
+  toMinutes, dropSeconds, removeDuplicatesInSortedShape,
 };
