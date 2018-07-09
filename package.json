@@ -7,6 +7,9 @@
   "scripts": {
     "start": "webpack-dev-server --mode development -d --open",
     "test": "mocha --compilers js:babel-core/register",
+    "getSchedule": "node --require babel-register src/modules/dataImport/exportSchedule.js",
+    "getStops": "node --require babel-register src/modules/dataImport/stopsToGeoJSON.js",
+    "mergeGeoJSON": "node node_modules/@mapbox/geojson-merge/geojson-merge",
     "lint": "eslint \"./src/**/*.js\""
   },
   "author": "",
@@ -17,7 +20,7 @@
     "babel-polyfill": "^6.26.0",
     "date-fns": "^1.29.0",
     "enumify": "^1.0.4",
-    "gtfs": "^1.6.2",
+    "gtfs": "github:Kalaboum/node-gtfs#ecff656bd5026c9364e3a4b96b5dbbdd48a71be2",
     "gtfs-to-geojson": "^0.4.8",
     "lodash": "^4.17.10",
     "mapbox-gl": "^0.45.0",
