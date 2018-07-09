@@ -1,5 +1,5 @@
 import mapboxgl from 'mapbox-gl';
-import { activateClickCallback, clickToSeeBuses } from './modules/dataInteraction/debug';
+import { clickToSeeBuses } from './modules/dataInteraction/debug';
 import { initSources } from './modules/dataInteraction/ScheduleFeatures';
 
 const map = new mapboxgl.Map({

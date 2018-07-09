@@ -31,8 +31,8 @@ function minutesInMilliseconds(minutes) {
 }
 
 function GeoJSONToCrossFilterFacts(geojson, referenceDate, millisecondsTimeStamp) {
-  // No idea why but query rendered features deliver trips as strings and not array
-  // even though it is an array in the original geojson
+  // query rendered features return the properties as String or numeric value
+  // c.f docs -> https://www.mapbox.com/mapbox-gl-js/api/#map#queryrenderedfeatures
   const trips = JSON.parse(geojson.properties.trips);
   return trips.map((trip) => {
     const begin = getPerformanceLikeFromHHMM(
