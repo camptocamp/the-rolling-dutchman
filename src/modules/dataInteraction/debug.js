@@ -6,18 +6,18 @@ function filterFeatures(features) {
 }
 
 function activateClickCallback(map) {
-  /*map.on('click', (e) => {
+  map.on('click', (e) => {
     const features = map.queryRenderedFeatures(e.point);
     const filteredFeatures = filterFeatures(features);
-    document.getElementById('features').innerHTML = JSON.stringify(features, null, 2);
-  });*/
+    document.getElementById('features').innerHTML = JSON.stringify(filteredFeatures, null, 2);
+  });
 }
 
-function hoverMouse(map) {
+function clickToSeeBuses(map) {
   map.on('click', (e) => {
     const features = map.queryRenderedFeatures(e.point, { layers: [animatedBusesLayerId] });
     document.getElementById('features').innerHTML = JSON.stringify(features, null, 2);
   });
 }
 
-export { activateClickCallback, hoverMouse };
+export { activateClickCallback, clickToSeeBuses };

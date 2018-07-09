@@ -128,7 +128,7 @@ function initSources(map) {
     source: animatedBusesSourceId,
     type: 'circle',
     paint: {
-      'circle-radius': 3,
+      'circle-radius': 6,
       'circle-color': '#ff0000',
     },
   });
