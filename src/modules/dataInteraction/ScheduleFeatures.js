@@ -1,6 +1,7 @@
 /* eslint-disable arrow-body-style */
 import differenceInMilliseconds from 'date-fns/difference_in_milliseconds';
 import * as turf from '@turf/turf';
+import crossfilter from 'crossfilter2';
 import {
   pointToGeoJSONFeature,
   getDateFromHHMM,
@@ -29,48 +30,24 @@ function minutesInMilliseconds(minutes) {
   return minutes * 60 * 1000;
 }
 
-function millisecondsInMinutes(milliseconds) {
-  return (milliseconds / 60) / 1000;
-}
-
-class ScheduleFeature {
-  constructor(geojson, referenceDate, millisecondsTimeStamp) {
-    if (typeof geojson === 'string') {
-      this.geojson = JSON.parse(geojson);
-    } else {
-      this.geojson = geojson;
-    }
-    this.geojson.properties.trips = JSON.parse(this.geojson.properties.trips);
-    this.geojson.properties.modifiedTrips = this.geojson.properties.trips
-      .map((trip) => {
-        const begin = getPerformanceLikeFromHHMM(
-          trip.startTime,
-          referenceDate,
-          millisecondsTimeStamp,
-        );
-        return { begin, end: begin + minutesInMilliseconds(trip.travelTime) };
-      });
-  }
-
-  getTrips() {
-    return this.geojson.properties.modifiedTrips;
-  }
-  getCoordinates() {
-    return this.geojson.geometry.coordinates;
-  }
-  getActiveTripsWithCoordinates(timeStamp) {
-    const now = timeStamp;
-    const trips = this.getTrips().filter((trip) => {
-      const { begin } = trip;
-      const { end } = trip;
-      const hackyCondition = millisecondsInMinutes(end - begin) < 10;
-      return begin < now && end > now && hackyCondition;
-    });
+function GeoJSONToCrossFilterFacts(geojson, referenceDate, millisecondsTimeStamp) {
+  // query rendered features return the properties as String or numeric value
+  // c.f docs -> https://www.mapbox.com/mapbox-gl-js/api/#map#queryrenderedfeatures
+  const trips = JSON.parse(geojson.properties.trips);
+  return trips.map((trip) => {
+    const begin = getPerformanceLikeFromHHMM(
+      trip.startTime,
+      referenceDate,
+      millisecondsTimeStamp,
+    );
     return {
-      trips,
-      coordinates: this.getCoordinates(),
+      trip,
+      coordinates: geojson.geometry.coordinates,
+      begin,
+      properties: geojson.properties,
+      end: begin + minutesInMilliseconds(trip.travelTime),
     };
-  }
+  });
 }
 
 class ScheduleFeatures {
@@ -80,25 +57,33 @@ class ScheduleFeatures {
   update() {
     this.referenceDate = new Date();
     this.millisecondsTimeStamp = performance.now();
-    this.features = this.map.queryRenderedFeatures(undefined, {
+    const features = this.map.queryRenderedFeatures(undefined, {
       layers: [layerWithScheduleId],
-    }).map(geojson => new ScheduleFeature(geojson, this.referenceDate, this.millisecondsTimeStamp));
+    });
+    const crossfilterFactArray = features.map(feature =>
+      GeoJSONToCrossFilterFacts(feature, this.referenceDate, this.millisecondsTimeStamp));
+    const crossfilterFacts = flattenArray(crossfilterFactArray);
+    this.schedule = crossfilter(crossfilterFacts);
+    this.beginDimension = this.schedule.dimension(d => d.begin);
+    this.endDimension = this.schedule.dimension(d => d.end);
     this.counter = 0;
+  }
+  updateFilters(timeStamp) {
+    this.beginDimension.filterFunction(d => d <= timeStamp);
+    this.endDimension.filterFunction(d => d >= timeStamp);
   }
   getActiveTrips(timeStamp) {
     if (this.activeTrips === undefined || this.counter === 60) {
+      this.updateFilters(timeStamp);
       this.counter = 0;
-      this.activeTrips = this.features.map(geojsonFeature => geojsonFeature
-        .getActiveTripsWithCoordinates(timeStamp));
-      this.activeTrips = this.activeTrips.filter(activeTrip => activeTrip.trips.length > 0);
+      this.activeTrips = this.schedule.allFiltered();
     }
     this.counter += 1;
     return this.activeTrips;
   }
 }
 
-
-function getPointsFromActiveTrip(activeTrip, timeStamp) {
+function getPointFromActiveTrip(activeTrip, timeStamp) {
   if (activeTrip.length === 0) {
     return [];
   }
@@ -110,25 +95,25 @@ function getPointsFromActiveTrip(activeTrip, timeStamp) {
   try {
     distance = turf.distance(coords[0], coords[coords.length - 1], options);
   } catch (error) {
+    // On less than 10% of the shapes the coords are unvalid
+    // there is a level of nesting in excess
     coords = flattenArray(coords);
     distance = turf.distance(coords[0], coords[coords.length - 1], options);
   }
   const lineString = turf.lineString(coords);
-  return activeTrip.trips.map((trip) => {
-    const millisecondsPassed = timeStamp - trip.begin;
-    const fractionTraveled = millisecondsPassed / (trip.end - trip.begin);
-    return turf.along(lineString, distance * fractionTraveled, options);
-  });
+  const millisecondsPassed = timeStamp - activeTrip.begin;
+  const fractionTraveled = millisecondsPassed / (activeTrip.end - activeTrip.begin);
+  const geojsonPoint = turf.along(lineString, distance * fractionTraveled, options);
+  return Object.assign(geojsonPoint, { properties: activeTrip.properties });
 }
 
 
 function animateBuses(scheduleFeatures, map, timeStamp) {
   const activeTrips = scheduleFeatures.getActiveTrips(timeStamp);
-  const pointsFeatureNotFlatten = activeTrips.map((activeTrip) => {
-    return getPointsFromActiveTrip(activeTrip, timeStamp);
+  const pointFeatures = activeTrips.map((activeTrip) => {
+    return getPointFromActiveTrip(activeTrip, timeStamp);
   });
-  const pointsFeature = flattenArray(pointsFeatureNotFlatten);
-  const geojson = featuresToGeoJSON(pointsFeature);
+  const geojson = featuresToGeoJSON(pointFeatures);
   map.getSource(animatedBusesSourceId).setData(geojson);
   requestAnimationFrame(timestamp => animateBuses(scheduleFeatures, map, timestamp));
 }
@@ -143,7 +128,7 @@ function initSources(map) {
     source: animatedBusesSourceId,
     type: 'circle',
     paint: {
-      'circle-radius': 3,
+      'circle-radius': 6,
       'circle-color': '#ff0000',
     },
   });
@@ -152,4 +137,4 @@ function initSources(map) {
   map.on('moveend', () => scheduleFeatures.update());
   animateBuses(scheduleFeatures, map, performance.now());
 }
-export { initSources };
+export { initSources, animatedBusesLayerId };
