@@ -8,6 +8,7 @@ import {
   flattenArray,
   featuresToGeoJSON,
 } from './utils';
+import VirtualClock from './virtualClock';
 
 
 const animatedBusesSourceId = 'buses';
@@ -53,6 +54,7 @@ function GeoJSONToCrossFilterFacts(geojson, referenceDate, millisecondsTimeStamp
 class ScheduleFeatures {
   constructor(map) {
     this.map = map;
+    this.virtualClock = this.virtualClock;
   }
   update() {
     this.referenceDate = new Date();
@@ -108,17 +110,20 @@ function getPointFromActiveTrip(activeTrip, timeStamp) {
 }
 
 
-function animateBuses(scheduleFeatures, map, timeStamp) {
-  const activeTrips = scheduleFeatures.getActiveTrips(timeStamp);
+function animateBuses(scheduleFeatures, map, timeStamp, virtualClock) {
+  virtualClock.updateTime(timeStamp);
+  const virtualTime = virtualClock.getTime();
+  const activeTrips = scheduleFeatures.getActiveTrips(virtualTime);
   const pointFeatures = activeTrips.map((activeTrip) => {
-    return getPointFromActiveTrip(activeTrip, timeStamp);
+    return getPointFromActiveTrip(activeTrip, virtualTime);
   });
   const geojson = featuresToGeoJSON(pointFeatures);
   map.getSource(animatedBusesSourceId).setData(geojson);
-  requestAnimationFrame(timestamp => animateBuses(scheduleFeatures, map, timestamp));
+  requestAnimationFrame(timestamp => animateBuses(scheduleFeatures, map, timestamp, virtualClock));
 }
 
 function initSources(map) {
+  const virtualClock = new VirtualClock();
   map.addSource(animatedBusesSourceId, {
     type: 'geojson',
     data: featuresToGeoJSON([pointToGeoJSONFeature([0, 0])]),
@@ -132,9 +137,9 @@ function initSources(map) {
       'circle-color': '#ff0000',
     },
   });
-  const scheduleFeatures = new ScheduleFeatures(map);
+  const scheduleFeatures = new ScheduleFeatures(map, virtualClock);
   scheduleFeatures.update();
   map.on('moveend', () => scheduleFeatures.update());
-  animateBuses(scheduleFeatures, map, performance.now());
+  animateBuses(scheduleFeatures, map, performance.now(), virtualClock);
 }
 export { initSources, animatedBusesLayerId };
