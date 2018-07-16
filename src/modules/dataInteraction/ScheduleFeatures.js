@@ -110,8 +110,11 @@ function getPointFromActiveTrip(activeTrip, timeStamp) {
 }
 
 
-function animateBuses(scheduleFeatures, map, timeStamp, virtualClock) {
+function animateBuses(scheduleFeatures, map, timeStamp, virtualClock, counter) {
   virtualClock.updateTime(timeStamp);
+  if (counter % 60 === 0) {
+    virtualClock.updateSlider();
+  }
   const virtualTime = virtualClock.getTime();
   const activeTrips = scheduleFeatures.getActiveTrips(virtualTime);
   const pointFeatures = activeTrips.map((activeTrip) => {
@@ -119,7 +122,7 @@ function animateBuses(scheduleFeatures, map, timeStamp, virtualClock) {
   });
   const geojson = featuresToGeoJSON(pointFeatures);
   map.getSource(animatedBusesSourceId).setData(geojson);
-  requestAnimationFrame(timestamp => animateBuses(scheduleFeatures, map, timestamp, virtualClock));
+  requestAnimationFrame(timestamp => animateBuses(scheduleFeatures, map, timestamp, virtualClock, counter + 1));
 }
 
 function initSources(map) {
@@ -140,6 +143,6 @@ function initSources(map) {
   const scheduleFeatures = new ScheduleFeatures(map, virtualClock);
   scheduleFeatures.update();
   map.on('moveend', () => scheduleFeatures.update());
-  animateBuses(scheduleFeatures, map, performance.now(), virtualClock);
+  animateBuses(scheduleFeatures, map, performance.now(), virtualClock, 0);
 }
 export { initSources, animatedBusesLayerId };

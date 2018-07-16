@@ -1,6 +1,8 @@
+import 'bootstrap/dist/css/bootstrap.min.css';
 import mapboxgl from 'mapbox-gl';
 import { clickToSeeBuses, activateClickCallback } from './modules/dataInteraction/debug';
 import { initSources } from './modules/dataInteraction/ScheduleFeatures';
+
 
 const map = new mapboxgl.Map({
   container: 'map',

@@ -15,5 +15,13 @@ module.exports = {
   devServer: {
     contentBase: '.',
     port : 8000
+  },
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader']
+      }
+    ]
   }
 };

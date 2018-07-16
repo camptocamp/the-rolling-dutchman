@@ -15,19 +15,26 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^5.1.0",
     "@mapbox/geojson-merge": "^1.0.2",
     "@turf/turf": "^5.1.6",
     "babel-polyfill": "^6.26.0",
+    "bootstrap": "^4.1.2",
+    "bootstrap-slider": "^10.0.2",
     "crossfilter2": "^1.4.6",
+    "css-loader": "^1.0.0",
     "date-fns": "^1.29.0",
     "enumify": "^1.0.4",
     "gtfs": "github:Kalaboum/node-gtfs#ecff656bd5026c9364e3a4b96b5dbbdd48a71be2",
     "gtfs-to-geojson": "^0.4.8",
+    "jquery": "^3.3.1",
     "lodash": "^4.17.10",
     "mapbox-gl": "^0.45.0",
     "mkdirp": "^0.5.1",
     "moment": "^2.22.1",
-    "mongoose": "^5.0.16"
+    "mongoose": "^5.0.16",
+    "popper.js": "^1.14.3",
+    "style-loader": "^0.21.0"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
