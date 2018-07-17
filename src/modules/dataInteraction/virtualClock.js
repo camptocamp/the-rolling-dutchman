@@ -1,9 +1,28 @@
-import { addMilliseconds, getMinutes, getHours, format, differenceInMilliseconds, setHours, setMinutes } from 'date-fns';
+import {
+  addMilliseconds,
+  getMinutes,
+  getHours,
+  format,
+  differenceInMilliseconds,
+  setHours,
+  setMinutes,
+} from 'date-fns';
 import $ from 'jquery';
 
 function minutesSinceBeginOfDay(date) {
   return getMinutes(date) + (60 * getHours(date));
 }
+
+function removeTokenAtTheEnd(string, token) {
+  if (string.indexOf(token) === string.length - 1) {
+    return string.substring(0, string.length - 1);
+  }
+}
+function isNumeric(n) {
+  return !Number.isNaN(parseFloat(n)) && Number.isFinite(parseFloat(n));
+}
+
+const SPEED_ARRAY = [-60, -30, -10, -5, -4, -2, -1, -0.5, 0.5, 1, 2, 4, 5, 10, 30, 60];
 
 class VirtualClock {
   constructor() {
@@ -16,9 +35,12 @@ class VirtualClock {
     this.time = performance.now();
     this.beginTime = this.time;
     this.lastTimeStamp = performance.now();
+    $('#speed-up').on('click', () => this.speedUp());
+    $('#speed-down').on('click', () => this.speedDown());
     $('#pause-button').on('click', () => this.pause());
     $('#play-button').on('click', () => this.play());
-    document.getElementById('slider').addEventListener('input', e => this.receiveSliderInput(e.target.value));
+    document.getElementById('slider').addEventListener('input', e => this.receiveTimeSliderInput(e.target.value));
+    document.getElementById('speed-number').addEventListener('blur', e => this.receiveSpeedInput(e.target.value));
   }
   pause() {
     this.isPaused = true;
@@ -34,6 +56,7 @@ class VirtualClock {
   }
   setSpeed(speed) {
     this.speed = speed;
+    $('#speed-number').val(`${speed}x`);
   }
   updateTime(timeStamp) {
     if (!this.isPaused) {
@@ -48,10 +71,16 @@ class VirtualClock {
     $('#slider-value').text(format(correspondingDate, 'HH:mm:ss'));
     $('#slider').val(value);
   }
-  receiveSliderInput(value) {
+  receiveTimeSliderInput(value) {
     const hours = Math.floor(value / 60);
     const minutes = value % 60;
     this.setCorrespondingDate(setHours(setMinutes(new Date(), minutes), hours));
+  }
+  receiveSpeedInput(value) {
+    const number = removeTokenAtTheEnd(value, 'x');
+    if (isNumeric(number)) {
+      this.setSpeed(parseFloat(number));
+    }
   }
   getCorrespondingDate() {
     return addMilliseconds(new Date(this.beginDate), this.time - this.beginTime);
@@ -60,6 +89,24 @@ class VirtualClock {
     const millisecondsPassed = differenceInMilliseconds(date, this.beginDate);
     this.lastTimeStamp = performance.now();
     this.time = this.beginTime + millisecondsPassed;
+  }
+  speedDown() {
+    let index = SPEED_ARRAY.findIndex(element => element >= this.speed);
+    if (index === -1) {
+      index = SPEED_ARRAY.length - 1;
+    } else {
+      index -= 1;
+    }
+    if (index >= 0) {
+      this.setSpeed(SPEED_ARRAY[index]);
+    }
+  }
+  speedUp() {
+    let index = SPEED_ARRAY.findIndex(element => element > this.speed);
+    if (index === -1) {
+      index = SPEED_ARRAY.length - 1;
+    }
+    this.setSpeed(SPEED_ARRAY[index]);
   }
 }
 
