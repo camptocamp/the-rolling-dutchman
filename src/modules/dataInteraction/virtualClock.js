@@ -17,6 +17,7 @@ function removeTokenAtTheEnd(string, token) {
   if (string.indexOf(token) === string.length - 1) {
     return string.substring(0, string.length - 1);
   }
+  return string;
 }
 function isNumeric(n) {
   return !Number.isNaN(parseFloat(n)) && Number.isFinite(parseFloat(n));
