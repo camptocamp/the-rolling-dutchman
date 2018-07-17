@@ -84,7 +84,13 @@ class ScheduleFeatures {
     return this.activeTrips;
   }
 }
-
+/**
+ * Using the library turf, compute the point along the fragmented shape using the activeTrip
+ * and the current timeStamp.
+ * Returns undefined is the timeStamp is before the activeTrip (When the time is going back)
+ * @param {*} activeTrip
+ * @param {*} timeStamp
+ */
 function getPointFromActiveTrip(activeTrip, timeStamp) {
   if (activeTrip.length === 0) {
     return [];
@@ -105,8 +111,13 @@ function getPointFromActiveTrip(activeTrip, timeStamp) {
   const lineString = turf.lineString(coords);
   const millisecondsPassed = timeStamp - activeTrip.begin;
   const fractionTraveled = millisecondsPassed / (activeTrip.end - activeTrip.begin);
+  if (fractionTraveled < 0) {
+    return undefined;
+  }
   const geojsonPoint = turf.along(lineString, distance * fractionTraveled, options);
-  return Object.assign(geojsonPoint, { properties: activeTrip.properties });
+  return Object.assign(geojsonPoint, {
+    properties: activeTrip.properties,
+  });
 }
 
 
@@ -120,7 +131,8 @@ function animateBuses(scheduleFeatures, map, timeStamp, virtualClock, counter) {
   const pointFeatures = activeTrips.map((activeTrip) => {
     return getPointFromActiveTrip(activeTrip, virtualTime);
   });
-  const geojson = featuresToGeoJSON(pointFeatures);
+  const pointFeaturesFiltered = pointFeatures.filter(feature => feature !== undefined);
+  const geojson = featuresToGeoJSON(pointFeaturesFiltered);
   map.getSource(animatedBusesSourceId).setData(geojson);
   requestAnimationFrame(timestamp => animateBuses(scheduleFeatures, map, timestamp, virtualClock, counter + 1));
 }
@@ -145,4 +157,7 @@ function initSources(map) {
   map.on('moveend', () => scheduleFeatures.update());
   animateBuses(scheduleFeatures, map, performance.now(), virtualClock, 0);
 }
-export { initSources, animatedBusesLayerId };
+export {
+  initSources,
+  animatedBusesLayerId,
+};

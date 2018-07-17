@@ -1,8 +1,8 @@
-import { addMilliseconds, getMinutes, getHours, format } from 'date-fns';
+import { addMilliseconds, getMinutes, getHours, format, differenceInMilliseconds, setHours, setMinutes } from 'date-fns';
 import $ from 'jquery';
 
 function minutesSinceBeginOfDay(date) {
-  return getMinutes(date) + (24 * getHours(date));
+  return getMinutes(date) + (60 * getHours(date));
 }
 
 class VirtualClock {
@@ -18,6 +18,7 @@ class VirtualClock {
     this.lastTimeStamp = performance.now();
     $('#pause-button').on('click', () => this.pause());
     $('#play-button').on('click', () => this.play());
+    document.getElementById('slider').addEventListener('input', e => this.receiveSliderInput(e.target.value));
   }
   pause() {
     this.isPaused = true;
@@ -45,10 +46,20 @@ class VirtualClock {
     const correspondingDate = this.getCorrespondingDate();
     const value = minutesSinceBeginOfDay(correspondingDate);
     $('#slider-value').text(format(correspondingDate, 'HH:mm:ss'));
-    $('#slider').attr('value', value);
+    $('#slider').val(value);
+  }
+  receiveSliderInput(value) {
+    const hours = Math.floor(value / 60);
+    const minutes = value % 60;
+    this.setCorrespondingDate(setHours(setMinutes(new Date(), minutes), hours));
   }
   getCorrespondingDate() {
     return addMilliseconds(new Date(this.beginDate), this.time - this.beginTime);
+  }
+  setCorrespondingDate(date) {
+    const millisecondsPassed = differenceInMilliseconds(date, this.beginDate);
+    this.lastTimeStamp = performance.now();
+    this.time = this.beginTime + millisecondsPassed;
   }
 }
 
