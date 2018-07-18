@@ -1,4 +1,6 @@
-import { animatedBusesLayerId } from './ScheduleFeatures';
+import { animatedBusesLayerId, endPointSourceId  } from './ScheduleFeatures';
+import { pointToGeoJSONFeature, flattenArray } from './utils';
+import { featuresToGeoJSON } from '../geojson-utils';
 
 function filterFeatures(features) {
   const gtfsLayerIds = ['stops', 'routes', 'shapes_fragmented'];
@@ -15,9 +17,33 @@ function activateClickCallback(map) {
 
 function clickToSeeBuses(map) {
   map.on('click', (e) => {
-    const features = map.queryRenderedFeatures(e.point, { layers: [animatedBusesLayerId] });
+    const features = map.queryRenderedFeatures(e.point, {
+      layers: [animatedBusesLayerId],
+    });
     document.getElementById('features').innerHTML = JSON.stringify(features, null, 2);
   });
 }
 
-export { activateClickCallback, clickToSeeBuses };
+function showFragmentedShapeBeginAndEnd(map) {
+  window.map = map;
+  map.on('click', (e) => {
+    const features = map.queryRenderedFeatures(e.point, {
+      layers: [animatedBusesLayerId],
+    });
+    const endPointFeatures = features.map((feature) => {
+      const beginPoint = pointToGeoJSONFeature(JSON.parse(feature.properties.begin));
+      const endPoint = pointToGeoJSONFeature(JSON.parse(feature.properties.end));
+      Object.assign(beginPoint.properties, feature.properties);
+      Object.assign(beginPoint.properties, feature.properties);
+      return [beginPoint, endPoint];
+    });
+    const endPointFeaturesFlatten = flattenArray(endPointFeatures);
+    const geojson = featuresToGeoJSON(endPointFeaturesFlatten);
+    map.getSource(endPointSourceId).setData(geojson);
+  });
+}
+export {
+  activateClickCallback,
+  clickToSeeBuses,
+  showFragmentedShapeBeginAndEnd,
+};

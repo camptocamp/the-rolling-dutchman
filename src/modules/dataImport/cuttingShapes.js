@@ -35,14 +35,16 @@ function differenceInMinutes(start, end) {
 }
 
 class FragmentedTrip {
-  constructor(startTime, endTime) {
+  constructor(startTime, endTime, tripId) {
     this.startTime = startTime;
     this.endTime = endTime;
+    this.tripId = tripId;
   }
   toJSON() {
     return {
       startTime: dropSeconds(this.startTime),
       travelTime: differenceInMinutes(this.startTime, this.endTime),
+      tripId: this.tripId,
     };
   }
 }
@@ -113,6 +115,13 @@ function splitShapeDistByStopTimes(shapeDistList, stopTimes) {
   return splittedList;
 }
 
+/**
+ * Use the shared information of shape_dist_traveled in GTFS shapes and GTFS stop_times
+ * to cut the shape in smaller parts containing fragmented trips
+ * @param {} fractionedShape 
+ * @param {*} shapeDists 
+ * @param {*} stopTimes 
+ */
 function createFragmentsForStopTimes(fractionedShape, shapeDists, stopTimes) {
   const stopTimesSorted = stopTimes.sort((a, b) => a.shape_dist_traveled - b.shape_dist_traveled);
   const splittedShape = splitShapeDistByStopTimes(shapeDists, stopTimesSorted);
@@ -124,6 +133,7 @@ function createFragmentsForStopTimes(fractionedShape, shapeDists, stopTimes) {
     const fragmentedTrip = new FragmentedTrip(
       stopTimesSorted[index].departure_time,
       stopTimesSorted[index + 1].arrival_time,
+      stopTimes[0].trip_id,
     );
     fractionedShape.addTrip(key, fragmentedTrip);
   });

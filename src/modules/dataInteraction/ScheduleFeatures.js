@@ -14,6 +14,8 @@ import VirtualClock from './virtualClock';
 const animatedBusesSourceId = 'buses';
 const animatedBusesLayerId = 'busLayer';
 const layerWithScheduleId = 'shapes_fragmented';
+const endPointLayerId = 'endPointLayer';
+const endPointSourceId = 'endPointSource';
 
 function getPerformanceLikeFromDate(date, referenceDate, millisecondsTimeStamp) {
   return differenceInMilliseconds(date, referenceDate) + millisecondsTimeStamp;
@@ -99,24 +101,25 @@ function getPointFromActiveTrip(activeTrip, timeStamp) {
   const options = {
     units: 'kilometers',
   };
-  let distance;
+  let lineString;
   try {
-    distance = turf.distance(coords[0], coords[coords.length - 1], options);
+    lineString = turf.lineString(coords);
   } catch (error) {
     // On less than 10% of the shapes the coords are unvalid
     // there is a level of nesting in excess
     coords = flattenArray(coords);
-    distance = turf.distance(coords[0], coords[coords.length - 1], options);
+    lineString = turf.lineString(coords);
   }
-  const lineString = turf.lineString(coords);
+  const lengthOfLineString = turf.length(lineString);
   const millisecondsPassed = timeStamp - activeTrip.begin;
   const fractionTraveled = millisecondsPassed / (activeTrip.end - activeTrip.begin);
   if (fractionTraveled < 0) {
     return undefined;
   }
-  const geojsonPoint = turf.along(lineString, distance * fractionTraveled, options);
+  const geojsonPoint = turf.along(lineString, lengthOfLineString * fractionTraveled, options);
+  const properties = Object.assign({ begin: coords[0], end: coords[coords.length - 1] }, activeTrip.properties);
   return Object.assign(geojsonPoint, {
-    properties: activeTrip.properties,
+    properties,
   });
 }
 
@@ -137,8 +140,24 @@ function animateBuses(scheduleFeatures, map, timeStamp, virtualClock, counter) {
   requestAnimationFrame(timestamp => animateBuses(scheduleFeatures, map, timestamp, virtualClock, counter + 1));
 }
 
-function initSources(map) {
-  const virtualClock = new VirtualClock();
+
+function initSourceEndPoint(map) {
+  map.addSource(endPointSourceId, {
+    type: 'geojson',
+    data: featuresToGeoJSON([pointToGeoJSONFeature([0, 0])]),
+  });
+  map.addLayer({
+    id: endPointLayerId,
+    source: endPointSourceId,
+    type: 'circle',
+    paint: {
+      'circle-radius': 10,
+      'circle-color': '#00ff00',
+    },
+  });
+}
+
+function initAnimateBusSource(map) {
   map.addSource(animatedBusesSourceId, {
     type: 'geojson',
     data: featuresToGeoJSON([pointToGeoJSONFeature([0, 0])]),
@@ -152,6 +171,12 @@ function initSources(map) {
       'circle-color': '#ff0000',
     },
   });
+}
+
+function initSources(map) {
+  const virtualClock = new VirtualClock();
+  initSourceEndPoint(map);
+  initAnimateBusSource(map);
   const scheduleFeatures = new ScheduleFeatures(map, virtualClock);
   scheduleFeatures.update();
   map.on('moveend', () => scheduleFeatures.update());
@@ -160,4 +185,6 @@ function initSources(map) {
 export {
   initSources,
   animatedBusesLayerId,
+  endPointLayerId,
+  endPointSourceId,
 };
