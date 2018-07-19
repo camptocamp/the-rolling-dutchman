@@ -9,6 +9,7 @@ import {
   featuresToGeoJSON,
 } from './utils';
 import VirtualClock from './virtualClock';
+import { min } from 'moment';
 
 
 const animatedBusesSourceId = 'buses';
@@ -43,12 +44,15 @@ function GeoJSONToCrossFilterFacts(geojson, referenceDate, millisecondsTimeStamp
       referenceDate,
       millisecondsTimeStamp,
     );
+    const end = begin + minutesInMilliseconds(trip.travelTime);
+    const endIdleTime = end + minutesInMilliseconds(trip.timeIdleAtEnd);
     return {
       trip,
       coordinates: geojson.geometry.coordinates,
       begin,
       properties: geojson.properties,
-      end: begin + minutesInMilliseconds(trip.travelTime),
+      end,
+      endIdleTime,
     };
   });
 }
@@ -69,7 +73,7 @@ class ScheduleFeatures {
     const crossfilterFacts = flattenArray(crossfilterFactArray);
     this.schedule = crossfilter(crossfilterFacts);
     this.beginDimension = this.schedule.dimension(d => d.begin);
-    this.endDimension = this.schedule.dimension(d => d.end);
+    this.endDimension = this.schedule.dimension(d => d.endIdleTime);
     this.counter = 0;
   }
   updateFilters(timeStamp) {
@@ -116,6 +120,9 @@ function getPointFromActiveTrip(activeTrip, timeStamp) {
   if (fractionTraveled < 0) {
     return undefined;
   }
+  // turf.along gives a GeoJSON poit along the lineString with a distance traveled
+  // If the distance is superior to the length of the lineString, it gives the last coordinate
+  // We abuse this feature for the idleTime at a stop
   const geojsonPoint = turf.along(lineString, lengthOfLineString * fractionTraveled, options);
   const properties = Object.assign({ begin: coords[0], end: coords[coords.length - 1] }, activeTrip.properties);
   return Object.assign(geojsonPoint, {

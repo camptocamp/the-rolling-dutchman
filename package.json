@@ -9,7 +9,7 @@
     "test": "mocha --compilers js:babel-core/register",
     "getSchedule": "node --require babel-register src/modules/dataImport/exportSchedule.js",
     "getStops": "node --require babel-register src/modules/dataImport/stopsToGeoJSON.js",
-    "mergeGeoJSON": "node node_modules/@mapbox/geojson-merge/geojson-merge",
+    "mergeGeoJSON": "node --max-old-space-size=4096 node_modules/@mapbox/geojson-merge/geojson-merge",
     "lint": "eslint \"./src/**/*.js\""
   },
   "author": "",

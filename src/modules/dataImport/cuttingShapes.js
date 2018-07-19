@@ -17,15 +17,15 @@ function toMinutes(hour, minutes) {
   return (hour * 60) + minutes;
 }
 
+function hhmmssToMinutes(hhmmss) {
+  const hhmmArray = dropSeconds(hhmmss).split(':');
+  const hours = parseInt(hhmmArray[0], 10);
+  const minutes = parseInt(hhmmArray[1], 10);
+  return toMinutes(hours, minutes);
+}
+
 function differenceInMinutes(start, end) {
-  const firstHoursMinutes = dropSeconds(start).split(':');
-  const secondHoursMinutes = dropSeconds(end).split(':');
-  const firstMinutes = parseInt(firstHoursMinutes[1], 10);
-  const firstHours = parseInt(firstHoursMinutes[0], 10);
-  const secondMinutes = parseInt(secondHoursMinutes[1], 10);
-  const secondHours = parseInt(secondHoursMinutes[0], 10);
-  let minutesDifferences = toMinutes(secondHours, secondMinutes) -
-  toMinutes(firstHours, firstMinutes);
+  let minutesDifferences = hhmmssToMinutes(end) - hhmmssToMinutes(start);
   minutesDifferences = mod(minutesDifferences, 24 * 60);
   if (minutesDifferences > MAXIMUM_TRAVEL_HOURS * 60) {
     throw Error(`A travel seems to take more than ${MAXIMUM_TRAVEL_HOURS} hours,
@@ -35,16 +35,18 @@ function differenceInMinutes(start, end) {
 }
 
 class FragmentedTrip {
-  constructor(startTime, endTime, tripId) {
+  constructor(startTime, endTime, tripId, timeIdleAtEnd) {
     this.startTime = startTime;
     this.endTime = endTime;
     this.tripId = tripId;
+    this.timeIdleAtEnd = timeIdleAtEnd;
   }
   toJSON() {
     return {
       startTime: dropSeconds(this.startTime),
       travelTime: differenceInMinutes(this.startTime, this.endTime),
       tripId: this.tripId,
+      timeIdleAtEnd: this.timeIdleAtEnd,
     };
   }
 }
@@ -118,9 +120,9 @@ function splitShapeDistByStopTimes(shapeDistList, stopTimes) {
 /**
  * Use the shared information of shape_dist_traveled in GTFS shapes and GTFS stop_times
  * to cut the shape in smaller parts containing fragmented trips
- * @param {} fractionedShape 
- * @param {*} shapeDists 
- * @param {*} stopTimes 
+ * @param {} fractionedShape
+ * @param {*} shapeDists
+ * @param {*} stopTimes
  */
 function createFragmentsForStopTimes(fractionedShape, shapeDists, stopTimes) {
   const stopTimesSorted = stopTimes.sort((a, b) => a.shape_dist_traveled - b.shape_dist_traveled);
@@ -130,10 +132,18 @@ function createFragmentsForStopTimes(fractionedShape, shapeDists, stopTimes) {
       shapeDists.indexOf(fragment[0]),
       shapeDists.indexOf(fragment[fragment.length - 1]),
     );
+    let idleTimeAtTheEnd = 0;
+    if (index + 1 < stopTimesSorted.length &&
+      stopTimes[index + 1].departure_time !== stopTimes[index + 1].arrival_time) {
+      const departureMinutes = hhmmssToMinutes(stopTimesSorted[index + 1].departure_time);
+      const arrivalMinutes = hhmmssToMinutes(stopTimesSorted[index + 1].arrival_time);
+      idleTimeAtTheEnd = departureMinutes - arrivalMinutes;
+    }
     const fragmentedTrip = new FragmentedTrip(
       stopTimesSorted[index].departure_time,
       stopTimesSorted[index + 1].arrival_time,
       stopTimes[0].trip_id,
+      idleTimeAtTheEnd,
     );
     fractionedShape.addTrip(key, fragmentedTrip);
   });
