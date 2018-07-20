@@ -40,8 +40,8 @@ class VirtualClock {
     $('#speed-down').on('click', () => this.speedDown());
     $('#pause-button').on('click', () => this.pause());
     $('#play-button').on('click', () => this.play());
-    document.getElementById('slider').addEventListener('input', e => this.receiveTimeSliderInput(e.target.value));
-    document.getElementById('speed-number').addEventListener('blur', e => this.receiveSpeedInput(e.target.value));
+    $('#slider').on('input', e => this.receiveTimeSliderInput(e.target.value));
+    $('#speed-number').on('blur', e => this.receiveSpeedInput(e.target.value));
   }
   pause() {
     this.isPaused = true;

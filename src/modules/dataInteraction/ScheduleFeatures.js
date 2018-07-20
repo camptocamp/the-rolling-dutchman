@@ -115,13 +115,14 @@ function getPointFromActiveTrip(activeTrip, timeStamp) {
   }
   const lengthOfLineString = turf.length(lineString);
   const millisecondsPassed = timeStamp - activeTrip.begin;
-  const fractionTraveled = millisecondsPassed / (activeTrip.end - activeTrip.begin);
+  let fractionTraveled = millisecondsPassed / (activeTrip.end - activeTrip.begin);
   if (fractionTraveled < 0) {
     return undefined;
   }
-  // turf.along gives a GeoJSON poit along the lineString with a distance traveled
-  // If the distance is superior to the length of the lineString, it gives the last coordinate
-  // We abuse this feature for the idleTime at a stop
+  // this happens when the bus are idle at a stop
+  if (fractionTraveled > 1) {
+    fractionTraveled = 1;
+  }
   const geojsonPoint = turf.along(lineString, lengthOfLineString * fractionTraveled, options);
   const properties = Object.assign({
     begin: coords[0],
