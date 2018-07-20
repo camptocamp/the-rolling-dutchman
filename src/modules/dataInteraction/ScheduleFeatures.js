@@ -9,7 +9,6 @@ import {
   featuresToGeoJSON,
 } from './utils';
 import VirtualClock from './virtualClock';
-import { min } from 'moment';
 
 
 const animatedBusesSourceId = 'buses';
@@ -124,7 +123,10 @@ function getPointFromActiveTrip(activeTrip, timeStamp) {
   // If the distance is superior to the length of the lineString, it gives the last coordinate
   // We abuse this feature for the idleTime at a stop
   const geojsonPoint = turf.along(lineString, lengthOfLineString * fractionTraveled, options);
-  const properties = Object.assign({ begin: coords[0], end: coords[coords.length - 1] }, activeTrip.properties);
+  const properties = Object.assign({
+    begin: coords[0],
+    end: coords[coords.length - 1],
+  }, activeTrip.properties);
   return Object.assign(geojsonPoint, {
     properties,
   });
@@ -144,7 +146,12 @@ function animateBuses(scheduleFeatures, map, timeStamp, virtualClock, counter) {
   const pointFeaturesFiltered = pointFeatures.filter(feature => feature !== undefined);
   const geojson = featuresToGeoJSON(pointFeaturesFiltered);
   map.getSource(animatedBusesSourceId).setData(geojson);
-  requestAnimationFrame(timestamp => animateBuses(scheduleFeatures, map, timestamp, virtualClock, counter + 1));
+  requestAnimationFrame(timestamp => animateBuses(
+    scheduleFeatures,
+    map,
+    timestamp,
+    virtualClock, counter + 1,
+  ));
 }
 
 

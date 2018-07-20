@@ -1,4 +1,4 @@
-import { animatedBusesLayerId, endPointSourceId  } from './ScheduleFeatures';
+import { animatedBusesLayerId, endPointSourceId } from './ScheduleFeatures';
 import { pointToGeoJSONFeature, flattenArray } from './utils';
 import { featuresToGeoJSON } from '../geojson-utils';
 

@@ -1,6 +1,6 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import mapboxgl from 'mapbox-gl';
-import { clickToSeeBuses, activateClickCallback, showFragmentedShapeBeginAndEnd } from './modules/dataInteraction/debug';
+import { activateClickCallback, showFragmentedShapeBeginAndEnd } from './modules/dataInteraction/debug';
 import { initSources } from './modules/dataInteraction/ScheduleFeatures';
 
 
