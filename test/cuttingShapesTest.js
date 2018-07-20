@@ -57,8 +57,9 @@ describe('createFragmentsForStopTimes', () => {
     mockUpStopTime(hour2, hour2, 1), mockUpStopTime(hour3, hour4, 3)];
   const stopTimes2 = [mockUpStopTime(hour1, hour1, 0), mockUpStopTime(hour2, hour2, 3)];
   const shapeDist = [0, 1, 3];
-  const firstResult = {"0,1": [{startTime: strippedHour1, travelTime: 2}], "1,2": [{startTime: strippedHour2, travelTime: 242}]};
-  const secondResult = {"0,2": [{startTime: strippedHour1, travelTime: 2}]};
+  const firstResult = {"0,1": [{startTime: strippedHour1, tripId: undefined, timeIdleAtEnd:0, travelTime: 2}],
+     "1,2": [{startTime: strippedHour2, tripId:undefined, timeIdleAtEnd:7, travelTime: 242}]};
+  const secondResult = {"0,2": [{startTime: strippedHour1, tripId: undefined, timeIdleAtEnd: 0, travelTime: 2}]};
   console.log(shapeDict1);
   createFragmentsForStopTimes(shapeDict1, shapeDist, stopTimes1);
   createFragmentsForStopTimes(shapeDict2, shapeDist, stopTimes2);
