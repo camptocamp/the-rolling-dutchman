@@ -1,6 +1,5 @@
 import { animatedBusesLayerId, endPointSourceId } from './ScheduleFeatures';
-import { pointToGeoJSONFeature, flattenArray } from './utils';
-import { featuresToGeoJSON } from '../geojson-utils';
+import { pointToGeoJSONFeature, flattenArray, featuresToGeoJSON } from './utils';
 
 function filterFeatures(features) {
   const gtfsLayerIds = ['stops', 'routes', 'shapes_fragmented'];
