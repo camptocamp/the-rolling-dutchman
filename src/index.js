@@ -1,6 +1,8 @@
+import 'bootstrap/dist/css/bootstrap.min.css';
 import mapboxgl from 'mapbox-gl';
-import { clickToSeeBuses } from './modules/dataInteraction/debug';
+import { activateClickCallback, showFragmentedShapeBeginAndEnd } from './modules/dataInteraction/debug';
 import { initSources } from './modules/dataInteraction/ScheduleFeatures';
+
 
 const map = new mapboxgl.Map({
   container: 'map',
@@ -9,5 +11,6 @@ const map = new mapboxgl.Map({
   zoom: 12,
 });
 map.showTileBoundaries = true;
-clickToSeeBuses(map);
+activateClickCallback(map);
+showFragmentedShapeBeginAndEnd(map);
 map.on('load', () => initSources(map));
