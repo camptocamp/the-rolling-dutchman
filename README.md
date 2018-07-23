@@ -8,29 +8,46 @@ Decided to fraction the shapes using shape\_dist\_traveled present in both shape
 For the moment require that the number be exactly the same.
 Expects also that the points corresponding to stop_location are repeated twice (otherwise it looses a piece of the shape).
 
-## Import data in mongodb
-* get GTFS from 
-* install mongodb 
-* launch mongodb (sudo service mongod start --setParameter cursorTimeoutMillis=1800000) (this parameter may be useful)
-* import gtfs to mongodb using node-gtfs
+## GTFS data
 
-## Export GeoJSON files from database
+### Vienna dataset
+Download from [here](https://transitfeeds.com/p/stadt-wien/888/20180119/download) and save to `data/Wien/gtfs.zip`.
 
-* ```node node node_modules/gtfs-to-geojson/bin/gtfs-to-geojson.js PATH\_TO\_CONFIG\_FILE```
-Will get the shapes to directory geojson -> does not contain the schedule
-* ```npm run getStops PATH\_TO\_CONFIG\_FILE```
-Will get the stops to a geojson file
-* ```npm run getSchedule PATH\_TO\_CONFIG\_FILE```
-Will get the shapes with the schedules in a geojson file
+## GTFS to GeoJSON conversion
 
-Standards config files are located in directories Netherlands/ and Wien/
-## merge geojson and generate tiles
+### Import into mongodb
+Run mongodb:
 
-* ```npm run mergeGeoJSON $PATH\_TO\_FILES > OUTPUT\_FILE```
-* Use tippecanoe to generate tiles
-* tippecanoe -o stops.mbtiles -l stops --minimum-zoom=9 --maximum-zoom=16 combined.geojson
-* tippecanoe -o schedule.mbtiles -l schedule --minimum-zoom=12 --maximum-zoom=16 CompleteSchedule.geojson
-* tippecanoe -o withoutSchedule.mbtiles -l Netherlands_gtfs --minimum-zoom=5 --maximum-zoom=11 geojson/Netherlands_gtfs.geojso
-* tile-join -o merged.mbtiles stops.mbtiles schedule.mbtiles withoutSchedule.mbtiles
-It is then possible to use parameters --minimum-zoom= and --maximum-zoom= to generate tiles for specific zoom levels.
-Combining this with tile-join it is possible to generates one .mbtiles without schedules for zoom 10-12 and with schedule for zoom 13-14. 
+```
+docker run -p 27017:27017 -v $PWD/data/mongodb:/data/db -d mongo:3.6.6-jessie --setParameter cursorTimeoutMillis=1800000
+```
+
+Import into mongodb, e.g. for Vienna dataset:
+
+```
+npm run import configWien/config-import-schedule.json
+```
+
+### Extract GeoJSON files from data in mongodb
+
+* Extract GeoJSON files of all stops: `npm run getStops PATH_TO_CONFIG_FILE`
+* Extract GeoJSON files of schedules: `npm run getSchedule PATH_TO_CONFIG_FILE`
+
+Sample config files are located in the `Netherlands/` and `Wien/` directories.
+
+### Merge GeoJSON
+
+```
+npm run mergeGeoJSON PATH_TO_FILES > OUTPUT_FILE
+```
+@TODO pipe adds random noise
+
+## Generate vector tiles
+
+Use tippecanoe to generate tiles
+* `tippecanoe -o stops.mbtiles -l stops --minimum-zoom=9 --maximum-zoom=16 stops.geojson`
+* `tippecanoe -o schedule.mbtiles -l schedule --minimum-zoom=12 --maximum-zoom=16 --no-tile-size-limit --no-clipping schedule.geojson`
+* `tippecanoe -o withoutSchedule.mbtiles -l Netherlands_gtfs --minimum-zoom=5 --maximum-zoom=11 geojson/Netherlands_gtfs.geojso`
+* `tile-join --no-tile-size-limit -o merged.mbtiles stops.mbtiles schedule.mbtiles withoutSchedule.mbtiles`
+It is then possible to use parameters `--minimum-zoom=` and `--maximum-zoom=` to generate tiles for specific zoom levels.
+Combining this with tile-join it is possible to generates one .mbtiles without schedules for zoom 10-12 and with schedule for zoom 13-14.

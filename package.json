@@ -5,6 +5,7 @@
   "main": "index.js",
   "build": "babel src -d dist --source-maps",
   "scripts": {
+    "import": "gtfs-import --configPath",
     "start": "webpack-dev-server --mode development -d --open",
     "test": "mocha --compilers js:babel-core/register",
     "getSchedule": "node --require babel-register src/modules/dataImport/exportSchedule.js",
