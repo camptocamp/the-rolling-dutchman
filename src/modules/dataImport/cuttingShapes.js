@@ -118,14 +118,16 @@ function splitShapeUsingShapeDist(shapeDistList, stopTimes) {
 
 // Currently does not support express -> check this format
 function splitShapeUsingSequence(shapeSequences, stopTimes) {
+  const shapeSequencesString = shapeSequences.map(int => int.toString());
   let lastIndexSequence = 0;
   let currentIndexSequence = 0;
   let currentIndexStopTimes = 0;
   const splittedShape = [];
-  while (currentIndexSequence < shapeSequences.length) {
+
+  while (currentIndexSequence < shapeSequencesString.length) {
     const prefix = stopTimes[currentIndexStopTimes].stop_sequence.toString();
-    if (!shapeSequences[currentIndexSequence].startsWith(prefix)) {
-      const fragmentToPush = shapeSequences.slice(lastIndexSequence, currentIndexSequence);
+    if (!shapeSequencesString[currentIndexSequence].startsWith(prefix)) {
+      const fragmentToPush = shapeSequencesString.slice(lastIndexSequence, currentIndexSequence);
       if (fragmentToPush.length === 0) {
         throw Error('Unexpected format of shape_pt_sequence, expected shape_pt_sequence to be prefixed by stop_sequence');
       }
@@ -135,6 +137,11 @@ function splitShapeUsingSequence(shapeSequences, stopTimes) {
     }
     currentIndexSequence += 1;
   }
+  const fragmentToPush = shapeSequencesString.slice(lastIndexSequence, currentIndexSequence);
+  if (fragmentToPush.length === 0) {
+    throw Error('Unexpected format of shape_pt_sequence, expected shape_pt_sequence to be prefixed by stop_sequence');
+  }
+  splittedShape.push(fragmentToPush);
   if (splittedShape.length !== stopTimes.length - 1) {
     throw Error('Shape was not split accordingly to stopTimes');
   }

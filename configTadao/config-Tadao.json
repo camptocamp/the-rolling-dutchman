@@ -1,6 +1,7 @@
 {
   "outputPathForStops" : "../output/Tadao/geojson/stops.geojson",
   "outputPathForSchedule" : "../output/Tadao/geojson/schedule.geojson",
+  "date" : "20180903",
   "mongoUrl": "mongodb://localhost:27017/Tadao",
   "agencies": [
     {
