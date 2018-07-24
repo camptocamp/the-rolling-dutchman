@@ -102,12 +102,11 @@ function makeKey(firstIndex, secondIndex) {
 }
 
 // assume that both begin to zero
-// warning, potentially bugged function
-function splitShapeDistByStopTimes(shapeDistList, stopTimes) {
+function splitShapeUsingShapeDist(shapeDistList, stopTimes) {
   const splittedList = [];
   let beginIndex = shapeDistList.indexOf(stopTimes[0].shape_dist_traveled);
   if (beginIndex === -1) {
-    console.log('blem');
+    throw Error('Unexpected format in shapes, shape dist traveled must correspond in shapes.txt and stop_times.txt');
   }
   stopTimes.slice(1, stopTimes.length).forEach((stopTime) => {
     const lastIndex = shapeDistList.indexOf(stopTime.shape_dist_traveled);
@@ -117,6 +116,40 @@ function splitShapeDistByStopTimes(shapeDistList, stopTimes) {
   return splittedList;
 }
 
+// Currently does not support express -> check this format
+function splitShapeUsingSequence(shapeSequences, stopTimes) {
+  let lastIndexSequence = 0;
+  let currentIndexSequence = 0;
+  let currentIndexStopTimes = 0;
+  const splittedShape = [];
+  while (currentIndexSequence < shapeSequences.length) {
+    const prefix = stopTimes[currentIndexStopTimes].stop_sequence.toString();
+    if (!shapeSequences[currentIndexSequence].startsWith(prefix)) {
+      const fragmentToPush = shapeSequences.slice(lastIndexSequence, currentIndexSequence);
+      if (fragmentToPush.length === 0) {
+        throw Error('Unexpected format of shape_pt_sequence, expected shape_pt_sequence to be prefixed by stop_sequence');
+      }
+      splittedShape.push(fragmentToPush);
+      currentIndexStopTimes += 1;
+      lastIndexSequence = currentIndexSequence;
+    }
+    currentIndexSequence += 1;
+  }
+  if (splittedShape.length !== stopTimes.length - 1) {
+    throw Error('Shape was not split accordingly to stopTimes');
+  }
+  return splittedShape;
+}
+
+function splitShape(shapePoints, stopTimes) {
+  if (shapePoints[0].shape_dist_traveled !== undefined) {
+    const shapeDists = shapePoints.map(shapePoint => shapePoint.shape_dist_traveled);
+    return splitShapeUsingShapeDist(shapeDists, stopTimes);
+  }
+  // We assume that shapes are separated by shape_pt_sequence
+  const shapeSequences = shapePoints.map(shapePoint => shapePoint.shape_pt_sequence);
+  return splitShapeUsingSequence(shapeSequences, stopTimes);
+}
 /**
  * Use the shared information of shape_dist_traveled in GTFS shapes and GTFS stop_times
  * to cut the shape in smaller parts containing fragmented trips
@@ -124,20 +157,27 @@ function splitShapeDistByStopTimes(shapeDistList, stopTimes) {
  * @param {*} shapeDists
  * @param {*} stopTimes
  */
-function createFragmentsForStopTimes(fractionedShape, shapeDists, stopTimes) {
-  const stopTimesSorted = stopTimes.sort((a, b) => a.shape_dist_traveled - b.shape_dist_traveled);
-  const splittedShape = splitShapeDistByStopTimes(shapeDists, stopTimesSorted);
+function createFragmentsForStopTimes(fractionedShape, shapePoints, stopTimes) {
+  const stopTimesSorted = stopTimes.sort((a, b) => a.stop_sequence - b.stop_sequence);
+  const splittedShape = splitShape(shapePoints, stopTimesSorted);
+  let startIndex = 0;
+  let endIndex = 0;
   splittedShape.forEach((fragment, index) => {
+    endIndex = startIndex + (fragment.length - 1);
     const key = makeKey(
-      shapeDists.indexOf(fragment[0]),
-      shapeDists.indexOf(fragment[fragment.length - 1]),
+      startIndex,
+      endIndex,
     );
+    startIndex = endIndex;
     let idleTimeAtTheEnd = 0;
     if (index + 1 < stopTimesSorted.length &&
       stopTimes[index + 1].departure_time !== stopTimes[index + 1].arrival_time) {
       const departureMinutes = hhmmssToMinutes(stopTimesSorted[index + 1].departure_time);
       const arrivalMinutes = hhmmssToMinutes(stopTimesSorted[index + 1].arrival_time);
       idleTimeAtTheEnd = departureMinutes - arrivalMinutes;
+    }
+    if (stopTimesSorted[index].departure_time === stopTimesSorted[index + 1].arrival_time) {
+      console.log('travelTime of zero');
     }
     const fragmentedTrip = new FragmentedTrip(
       stopTimesSorted[index].departure_time,
@@ -150,15 +190,21 @@ function createFragmentsForStopTimes(fractionedShape, shapeDists, stopTimes) {
 }
 
 function sortShape(shapePoints) {
-  shapePoints.sort((a, b) => a.shape_dist_traveled - b.shape_dist_traveled);
+  shapePoints.sort((a, b) => a.shape_pt_sequence - b.shape_pt_sequence);
 }
 
 function removeDuplicatesInSortedShape(shapePoints) {
   return shapePoints.filter((item, pos, array) => {
     const isFirstPos = !pos;
-    return (isFirstPos) || (item.shape_dist_traveled !== array[pos - 1].shape_dist_traveled);
+    if (isFirstPos) {
+      return true;
+    }
+    const isSameThatPrecedent = item.shape_pt_lat === array[pos - 1].shape_pt_lat &&
+      item.shape_pt_lon === array[pos - 1].shape_pt_lon;
+    return !isSameThatPrecedent;
   });
 }
+
 /*
 *  tripId have a unique shapeId
 *  a list of stopTimes defining the service
@@ -173,9 +219,8 @@ function fractionShape(shapePoints, stopTimesList) {
   sortShape(shapePoints);
   const shapePointsFiltered = removeDuplicatesInSortedShape(shapePoints);
   const fractionedShape = new FractionedShape(shapePointsFiltered);
-  const shapeDists = shapePointsFiltered.map(shapePoint => shapePoint.shape_dist_traveled);
   stopTimesList.forEach((stopTimes) => {
-    createFragmentsForStopTimes(fractionedShape, shapeDists, stopTimes);
+    createFragmentsForStopTimes(fractionedShape, shapePointsFiltered, stopTimes);
   });
   return fractionedShape;
 }

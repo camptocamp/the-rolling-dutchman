@@ -1,0 +1,15 @@
+{
+  "outputPathForStops" : "../output/Wien/geojson/stops.geojson",
+  "outputPathForSchedule" : "../output/Wien/geojson/schedule.geojson",
+  "mongoUrl": "mongodb://localhost:27017/Wien",
+  "agencies": [
+    {
+      "agency_key": "Wien_gtfs",
+      "path": "./data/Wien/gtfs.zip"
+    }
+  ],
+  "includeStops": false,
+  "outputType": "agency",
+  "coordinatePrecision": 5,
+  "zipOutput": false
+}

@@ -104,16 +104,17 @@ async function exportScheduleToGeoJSON() {
   await connect(config.mongoUrl);
   const servicesIds = await servicesUtils.getIdsOfServicesActiveToday();
   const agencyKeys = config.agencies.map(agency => agency.agency_key);
-  let shapesIds = await gtfs.getShapeIds();
+  //let shapesIds = await gtfs.getShapeIds();
+  let shapesIds = [725435];
   const totalShapes = shapesIds.length;
   // const filteredShapes = shapes.filter((shape, index) => (index % 10) === 0);
   let batchNumber = 0;
-  mkdirp(getDirectoryName(configPath, config.outputPath));
+  mkdirp(getDirectoryName(configPath, config.outputPathForSchedule));
   while (shapesIds.length > 0) {
     const remaining = shapesIds.splice(BATCH_SIZE);
     const schedule = await getScheduleGeoJSONFromShapes(shapesIds, servicesIds, agencyKeys);
     await fs.writeFile(
-      getOutputFileOfBatch(configPath, config.outputPath, batchNumber),
+      getOutputFileOfBatch(configPath, config.outputPathForSchedule, batchNumber),
       JSON.stringify(schedule),
     );
     shapesIds = remaining;
@@ -121,7 +122,7 @@ async function exportScheduleToGeoJSON() {
     console.log(`${batchNumber * BATCH_SIZE} of ${totalShapes} shapes processed`);
   }
   console.log(`schedule written in directory \
-  ${getDirectoryName(configPath, config.outputPath)}`);
+  ${getDirectoryName(configPath, config.outputPathForSchedule)}`);
   await closeConnection();
 }
 

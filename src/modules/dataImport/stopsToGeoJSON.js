@@ -36,19 +36,19 @@ async function main() {
   console.log(`${stopIds.length} stops found, going by batch of ${batchSize}`);
 
   let batchNumber = 0;
-  mkdirp(getDirectoryName(configPath, config.outputPath));
+  mkdirp(getDirectoryName(configPath, config.outputPathForStops));
   while (stopIds.length > 0) {
     const remaining = stopIds.splice(batchSize);
     const stops = await batch(stopIds.map(stopIdObj => stopIdObj.stop_id), agencyKeys);
     await fs.writeFile(
-      getOutputFileOfBatch(configPath, config.outputPath, batchNumber),
+      getOutputFileOfBatch(configPath, config.outputPathForStops, batchNumber),
       JSON.stringify(stops),
     );
     stopIds = remaining;
     batchNumber += 1;
     console.log(`${batchNumber * batchSize} stops written`);
   }
-  console.log(`stops written in directory ${getDirectoryName(configPath, config.outputPath)}`);
+  console.log(`stops written in directory ${getDirectoryName(configPath, config.outputPathForStops)}`);
   mongoose.connection.close();
 }
 
