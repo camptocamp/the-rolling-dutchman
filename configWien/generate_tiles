@@ -1,0 +1,32 @@
+#!/bin/bash
+scriptdir="$(dirname "$0")"
+cd "$scriptdir"
+pathToWienOut="../output/Wien/"
+pathToGeoJSONDir=$pathToWienOut"geojson/"
+pathToSchedule=$pathToGeoJSONDir"Schedule.geojson"
+pathToStops=$pathToGeoJSONDir"Stops.geojson"
+scheduleMbTilesName="schedule.mbtiles"
+stopsMbTilesName="stops.mbtiles"
+shapesMbTilesName="Wien.mbtiles"
+shapesLayer="Wien_gtfs"
+scheduleLayer="schedule"
+stopsLayer="stops"
+mergedMbTilesName="merged.mbtiles"
+
+tippecanoe -o $pathToWienOut$scheduleMbTilesName \
+--minimum-zoom=12 --maximum-zoom=13 \
+-pk -pc -l $scheduleLayer \
+$pathToSchedule && \
+tippecanoe -o $pathToWienOut$stopsMbTilesName \
+--minimum-zoom=10 --maximum-zoom=16 \
+-pk -pc -l $stopsLayer \
+$pathToStops && \
+tippecanoe -o $pathToWienOut$shapesMbTilesName \
+--minimum-zoom=8 --maximum-zoom=11 \
+-pk -pc -l $shapesLayer \
+-X \
+$pathToSchedule && \
+tile-join -pk -o $pathToWienOut$mergedMbTilesName \
+$pathToWienOut$scheduleMbTilesName \
+$pathToWienOut$stopsMbTilesName \
+$pathToWienOut$shapesMbTilesName

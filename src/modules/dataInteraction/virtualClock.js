@@ -25,6 +25,10 @@ function isNumeric(n) {
 
 const SPEED_ARRAY = [-60, -30, -10, -5, -4, -2, -1, -0.5, 0.5, 1, 2, 4, 5, 10, 30, 60];
 
+/**
+ * Allows to control time in bus animation
+ * control the user input over the buttons and reacts accordingly
+ */
 class VirtualClock {
   constructor() {
     this.init();
@@ -59,6 +63,10 @@ class VirtualClock {
     this.speed = speed;
     $('#speed-number').val(`${speed}x`);
   }
+  /**
+   * Update the time according to the speed
+   * @param {timeStamp given by the browser} timeStamp 
+   */
   updateTime(timeStamp) {
     if (!this.isPaused) {
       const diff = timeStamp - this.lastTimeStamp;

@@ -56,11 +56,18 @@ function GeoJSONToCrossFilterFacts(geojson, referenceDate, millisecondsTimeStamp
   });
 }
 
+/**
+ * Provides function to get Active trips according to a virtualClock
+ * Uses crossfilter library for performance
+ */
 class ScheduleFeatures {
   constructor(map) {
     this.map = map;
     this.virtualClock = this.virtualClock;
   }
+  /**
+   * Costly function but must be called each time the rendered features change so the output of getActiveTrips is correct
+   */
   update() {
     this.referenceDate = new Date();
     this.millisecondsTimeStamp = performance.now();
@@ -75,10 +82,19 @@ class ScheduleFeatures {
     this.endDimension = this.schedule.dimension(d => d.endIdleTime);
     this.counter = 0;
   }
+  /**
+   * update the filter on crossfilter data
+   * @param {virtualClock timestamp} timeStamp 
+   */
   updateFilters(timeStamp) {
     this.beginDimension.filterFunction(d => d <= timeStamp);
     this.endDimension.filterFunction(d => d >= timeStamp);
   }
+  /**
+   * Returns the trips active at this timeStamp
+   * Due to performance issue, does something every 60 times it is called
+   * @param {virtualClock timestamp} timeStamp 
+   */
   getActiveTrips(timeStamp) {
     if (this.activeTrips === undefined || this.counter === 60) {
       this.updateFilters(timeStamp);
@@ -133,7 +149,14 @@ function getPointFromActiveTrip(activeTrip, timeStamp) {
   });
 }
 
-
+/**
+ * Main function of animation, is called each frame
+ * @param {*} scheduleFeatures 
+ * @param {*} map 
+ * @param {*} timeStamp 
+ * @param {*} virtualClock 
+ * @param {*} counter 
+ */
 function animateBuses(scheduleFeatures, map, timeStamp, virtualClock, counter) {
   virtualClock.updateTime(timeStamp);
   if (counter % 60 === 0) {
@@ -171,7 +194,10 @@ function initSourceEndPoint(map) {
     },
   });
 }
-
+/**
+ * Initiate the source and the layers for the bus animation
+ * @param {*} map 
+ */
 function initAnimateBusSource(map) {
   map.addSource(animatedBusesSourceId, {
     type: 'geojson',
@@ -188,6 +214,10 @@ function initAnimateBusSource(map) {
   });
 }
 
+/**
+ * initiate necessary components for the animation
+ * @param {*} map 
+ */
 function initSources(map) {
   const virtualClock = new VirtualClock();
   initSourceEndPoint(map);

@@ -1,0 +1,32 @@
+#!/bin/bash
+scriptdir="$(dirname "$0")"
+cd "$scriptdir"
+pathToTadaoOut="../output/Tadao/"
+pathToGeoJSONDir=$pathToTadaoOut"geojson/"
+pathToSchedule=$pathToGeoJSONDir"Schedule.geojson"
+pathToStops=$pathToGeoJSONDir"Stops.geojson"
+scheduleMbTilesName="schedule.mbtiles"
+stopsMbTilesName="stops.mbtiles"
+shapesMbTilesName="Tadao.mbtiles"
+shapesLayer="Tadao_gtfs"
+scheduleLayer="schedule"
+stopsLayer="stops"
+mergedMbTilesName="merged.mbtiles"
+
+tippecanoe -o $pathToTadaoOut$scheduleMbTilesName \
+--minimum-zoom=12 --maximum-zoom=13 \
+-pk -pc -l $scheduleLayer \
+$pathToSchedule && \
+tippecanoe -o $pathToTadaoOut$stopsMbTilesName \
+--minimum-zoom=10 --maximum-zoom=16 \
+-pk -pc -l $stopsLayer \
+$pathToStops && \
+tippecanoe -o $pathToTadaoOut$shapesMbTilesName \
+--minimum-zoom=7 --maximum-zoom=11 \
+-pk -pc -l $shapesLayer \
+-X \
+$pathToSchedule && \
+tile-join -pk -o $pathToTadaoOut$mergedMbTilesName \
+$pathToTadaoOut$scheduleMbTilesName \
+$pathToTadaoOut$stopsMbTilesName \
+$pathToTadaoOut$shapesMbTilesName
