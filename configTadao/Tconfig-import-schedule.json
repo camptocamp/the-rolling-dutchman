@@ -1,0 +1,10 @@
+{
+  "outputPath" : "../output/Tadao/geojson/schedule.geojson",
+  "mongoUrl": "mongodb://localhost:27017/Tadao",
+  "agencies": [
+    {
+      "agency_key": "Tadao_gtfs",
+      "path": "./data/Netherlands/gtfs.zip"
+    }
+  ]
+}

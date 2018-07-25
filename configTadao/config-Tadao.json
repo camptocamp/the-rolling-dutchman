@@ -1,0 +1,16 @@
+{
+  "outputPathForStops" : "../output/Tadao/geojson/stops.geojson",
+  "outputPathForSchedule" : "../output/Tadao/geojson/schedule.geojson",
+  "date" : "20180903",
+  "mongoUrl": "mongodb://localhost:27017/Tadao",
+  "agencies": [
+    {
+      "agency_key": "Tadao_gtfs",
+      "path": "./data/Tadao/GTFS_Hiver_au_03-09-2018"
+    }
+  ],
+  "includeStops": false,
+  "outputType": "agency",
+  "coordinatePrecision": 5,
+  "zipOutput": false
+}
