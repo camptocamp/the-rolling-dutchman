@@ -127,7 +127,7 @@ describe('createFragmentsForStopTimes', () => {
   it('should not change the results if fragment are encoded in shape_pt_sequence', () => {
     const shapeDict1 = new FractionedShape('asd');
     const stopTimes3 = stopTimes1.map(object => removeShapeDistTraveledField(object));
-    const shape_pt_sequence = stringToShapePointsSequence(["11", "12", "21", "22", "31", "32"]);
+    const shape_pt_sequence = stringToShapePointsSequence(["11", "12", "21", "22"]);
     createFragmentsForStopTimes(shapeDict1, shape_pt_sequence, stopTimes3);
     assert.deepEqual(shapeDict1.toJSON(), firstResult);
   });

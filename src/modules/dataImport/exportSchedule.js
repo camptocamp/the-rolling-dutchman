@@ -101,7 +101,7 @@ async function getScheduleGeoJSONFromShapes(shapesIds, servicesIds, agencyKeys) 
 async function getServicesIds(config) {
   if (config.date !== undefined) {
     return servicesUtils.getIdsOfServicesActiveAtStringDate(config.date);
-  } 
+  }
   return servicesUtils.getIdsOfServicesActiveToday();
 }
 
@@ -109,7 +109,7 @@ async function exportScheduleToGeoJSON() {
   const configPath = process.argv[2];
   const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
   await connect(config.mongoUrl);
-  const servicesIds = await getServicesIds(config); 
+  const servicesIds = await getServicesIds(config);
   const agencyKeys = config.agencies.map(agency => agency.agency_key);
   let shapesIds = await gtfs.getShapeIds();
   const totalShapes = shapesIds.length;

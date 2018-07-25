@@ -1,7 +1,6 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import mapboxgl from 'mapbox-gl';
 import {
-  activateClickCallback,
   showFragmentedShapeBeginAndEnd,
   clickToSeeBuses,
 } from './modules/dataInteraction/debug';
