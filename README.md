@@ -61,8 +61,14 @@ We use [tippecanoe](https://github.com/mapbox/tippecanoe) to generate tiles. Tip
 * --minmium-zoom, --maximum-zoom : parameters used to control the range of zoom of the tile generation. Must be tuned according to the data, to avoid pointless large files.
 * -l layername : Must correspond to the layerName in the mapbox-style file
 * -pk : use to avoid limitsize of 500 KB per tile
-* -pc : use to avoid clipping of the features (currently necessary for the schedule to work properly but increase the size of the tiles for lower zooms)
+* -pc : use to avoid clipping of the features (currently necessary for the schedule to work properly but increases the size of the tiles for lower zooms)
 
 ### Examples
 
 See or run `./configWien/generate_tiles`
+
+## Run the web application
+
+* ```npm start```
+
+To switch between dataset, change the value of alias in `configWeb.json` to the path of another config file

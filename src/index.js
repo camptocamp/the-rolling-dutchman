@@ -20,6 +20,18 @@ function initMap(style, center, zoom) {
   map.on('load', () => initSources(map));
 }
 
-fetch('configWeb.json').then(value => value.json()).then((json) => {
-  initMap(json.style, json.center, json.zoom);
-});
+async function getConfig(path) {
+  const response = await fetch(path);
+  const jsonObject = await response.json();
+  if (jsonObject.alias !== undefined) {
+    return getConfig(jsonObject.alias);
+  }
+  return jsonObject;
+}
+
+async function initMapByConfig(configPath) {
+  const config = await getConfig(configPath);
+  initMap(config.style, config.center, config.zoom);
+}
+
+initMapByConfig('configWeb.json');

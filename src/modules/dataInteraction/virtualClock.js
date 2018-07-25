@@ -65,7 +65,7 @@ class VirtualClock {
   }
   /**
    * Update the time according to the speed
-   * @param {timeStamp given by the browser} timeStamp 
+   * @param {timeStamp given by the browser} timeStamp
    */
   updateTime(timeStamp) {
     if (!this.isPaused) {

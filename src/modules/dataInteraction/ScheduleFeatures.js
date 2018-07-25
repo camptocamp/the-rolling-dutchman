@@ -66,7 +66,8 @@ class ScheduleFeatures {
     this.virtualClock = this.virtualClock;
   }
   /**
-   * Costly function but must be called each time the rendered features change so the output of getActiveTrips is correct
+   * Costly function but must be called each time the rendered features
+   * change so the output of getActiveTrips is correct
    */
   update() {
     this.referenceDate = new Date();
@@ -84,7 +85,7 @@ class ScheduleFeatures {
   }
   /**
    * update the filter on crossfilter data
-   * @param {virtualClock timestamp} timeStamp 
+   * @param {virtualClock timestamp} timeStamp
    */
   updateFilters(timeStamp) {
     this.beginDimension.filterFunction(d => d <= timeStamp);
@@ -93,7 +94,7 @@ class ScheduleFeatures {
   /**
    * Returns the trips active at this timeStamp
    * Due to performance issue, does something every 60 times it is called
-   * @param {virtualClock timestamp} timeStamp 
+   * @param {virtualClock timestamp} timeStamp
    */
   getActiveTrips(timeStamp) {
     if (this.activeTrips === undefined || this.counter === 60) {
@@ -151,11 +152,11 @@ function getPointFromActiveTrip(activeTrip, timeStamp) {
 
 /**
  * Main function of animation, is called each frame
- * @param {*} scheduleFeatures 
- * @param {*} map 
- * @param {*} timeStamp 
- * @param {*} virtualClock 
- * @param {*} counter 
+ * @param {*} scheduleFeatures
+ * @param {*} map
+ * @param {*} timeStamp
+ * @param {*} virtualClock
+ * @param {*} counter
  */
 function animateBuses(scheduleFeatures, map, timeStamp, virtualClock, counter) {
   virtualClock.updateTime(timeStamp);
@@ -196,7 +197,7 @@ function initSourceEndPoint(map) {
 }
 /**
  * Initiate the source and the layers for the bus animation
- * @param {*} map 
+ * @param {*} map
  */
 function initAnimateBusSource(map) {
   map.addSource(animatedBusesSourceId, {
@@ -216,7 +217,7 @@ function initAnimateBusSource(map) {
 
 /**
  * initiate necessary components for the animation
- * @param {*} map 
+ * @param {*} map
  */
 function initSources(map) {
   const virtualClock = new VirtualClock();
