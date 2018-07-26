@@ -4,34 +4,30 @@ function mod(n, m) {
   return ((n % m) + m) % m;
 }
 
-function dropSeconds(hhmmss) {
-  const time = hhmmss.split(':');
-  if (time.length !== 3) {
-    throw new Error(`FragmentedTrip contains an unexpected format of schedule,
-     expected hh:mm:ss, got: ${hhmmss}`);
-  }
-  return time.slice(0, 2).join(':');
-}
-
 function toMinutes(hour, minutes) {
   return (hour * 60) + minutes;
 }
 
-function hhmmssToMinutes(hhmmss) {
-  const hhmmArray = dropSeconds(hhmmss).split(':');
-  const hours = parseInt(hhmmArray[0], 10);
-  const minutes = parseInt(hhmmArray[1], 10);
-  return toMinutes(hours, minutes);
+function toSeconds(hour, minutes, seconds) {
+  return (toMinutes(hour, minutes) * 60) + seconds;
 }
 
-function differenceInMinutes(start, end) {
-  let minutesDifferences = hhmmssToMinutes(end) - hhmmssToMinutes(start);
-  minutesDifferences = mod(minutesDifferences, 24 * 60);
-  if (minutesDifferences > MAXIMUM_TRAVEL_HOURS * 60) {
+function hhmmssToSeconds(hhmmss) {
+  const hhmmssArray = hhmmss.split(':');
+  const hours = parseInt(hhmmssArray[0], 10);
+  const minutes = parseInt(hhmmssArray[1], 10);
+  const seconds = parseInt(hhmmssArray[2], 10);
+  return toSeconds(hours, minutes, seconds);
+}
+
+function differenceInSeconds(start, end) {
+  let secondsDifferences = hhmmssToSeconds(end) - hhmmssToSeconds(start);
+  secondsDifferences = mod(secondsDifferences, 24 * 60 * 60);
+  if (secondsDifferences > MAXIMUM_TRAVEL_HOURS * 60 * 60) {
     throw Error(`A travel seems to take more than ${MAXIMUM_TRAVEL_HOURS} hours,
     are you sure that startTime: ${start} and endTime ${end} are not inverted ?`);
   }
-  return minutesDifferences;
+  return secondsDifferences;
 }
 
 class FragmentedTrip {
@@ -43,8 +39,8 @@ class FragmentedTrip {
   }
   toJSON() {
     return {
-      startTime: dropSeconds(this.startTime),
-      travelTime: differenceInMinutes(this.startTime, this.endTime),
+      startTime: this.startTime,
+      travelTime: differenceInSeconds(this.startTime, this.endTime),
       tripId: this.tripId,
       timeIdleAtEnd: this.timeIdleAtEnd,
     };
@@ -179,9 +175,9 @@ function createFragmentsForStopTimes(fractionedShape, shapePoints, stopTimes) {
     let idleTimeAtTheEnd = 0;
     if (index + 1 < stopTimesSorted.length &&
       stopTimes[index + 1].departure_time !== stopTimes[index + 1].arrival_time) {
-      const departureMinutes = hhmmssToMinutes(stopTimesSorted[index + 1].departure_time);
-      const arrivalMinutes = hhmmssToMinutes(stopTimesSorted[index + 1].arrival_time);
-      idleTimeAtTheEnd = departureMinutes - arrivalMinutes;
+      const departureSeconds = hhmmssToSeconds(stopTimesSorted[index + 1].departure_time);
+      const arrivalSeconds = hhmmssToSeconds(stopTimesSorted[index + 1].arrival_time);
+      idleTimeAtTheEnd = departureSeconds - arrivalSeconds;
     }
     if (stopTimesSorted[index].departure_time === stopTimesSorted[index + 1].arrival_time) {
       console.log('travelTime of zero');
@@ -234,6 +230,6 @@ function fractionShape(shapePoints, stopTimesList) {
 
 export {
   fractionShape, makeKey, createFragmentsForStopTimes,
-  FragmentedTrip, FractionedShape, differenceInMinutes,
-  toMinutes, dropSeconds, removeDuplicatesInSortedShape,
+  FragmentedTrip, FractionedShape, differenceInSeconds,
+  toMinutes, removeDuplicatesInSortedShape,
 };
