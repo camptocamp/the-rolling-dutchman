@@ -49,7 +49,7 @@ Will get the shapes with the schedules in a geojson file
 ### Merge GeoJSON
 
 The scripts getStops and getSchedule export the geojson in multiple batchs to gain time, use the following command to merge them back in one file: 
-* ```node_modules/\@mapbox/geojson-merge/geojson-merge  $PATH\_TO\_FILES > OUTPUT\_FILE```
+* ```node_modules/\@mapbox/geojson-merge/geojson-merge  PATH_TO_FILES > OUTPUT_FILE```
 
 ## Generate vector tiles
 
@@ -60,8 +60,8 @@ We use [tippecanoe](https://github.com/mapbox/tippecanoe) to generate tiles. Tip
 * -f : use to overwrite the outputFile
 * --minmium-zoom, --maximum-zoom : parameters used to control the range of zoom of the tile generation. Must be tuned according to the data, to avoid pointless large files.
 * -l layername : Must correspond to the layerName in the mapbox-style file
-* -pk : use to avoid limitsize of 500 KB per tile
-* -pc : use to avoid clipping of the features (currently necessary for the schedule to work properly but increases the size of the tiles for lower zooms)
+* --no-tile-size-limit : use to avoid limitsize of 500 KB per tile
+* --no-clipping : use to avoid clipping of the features (currently necessary for the schedule to work properly but increases the size of the tiles for lower zooms)
 
 ### Examples
 
