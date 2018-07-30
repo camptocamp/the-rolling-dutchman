@@ -12,7 +12,13 @@ function parseHHMMSS(HHMM, delimiter) {
 
 function getDateFromHHMMSS(HHMMSS, timeStamp, delimiter) {
   const hourMinutes = parseHHMMSS(HHMMSS, delimiter);
-  return setHours(setMinutes(setSeconds(timeStamp, hourMinutes[2]), hourMinutes[1]), hourMinutes[0]);
+  return setHours(
+    setMinutes(
+      setSeconds(timeStamp, hourMinutes[2]),
+      hourMinutes[1],
+    ),
+    hourMinutes[0],
+  );
 }
 
 function flattenArray(array) {

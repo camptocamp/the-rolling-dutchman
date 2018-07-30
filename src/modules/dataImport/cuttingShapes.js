@@ -160,7 +160,7 @@ function splitShape(shapePoints, stopTimes) {
  * @param {*} endIndex
  */
 function replaceStopTimesSchedule(stopTimes, startIndex, endIndex) {
-  const { departure_time } = stopTimes[startIndex];
+  const { departure_time } = stopTimes[startIndex]; // eslint-disable-line camelcase
   // We assume that 0 seconds travelTrip exists because GTFS providers
   // do not care about seconds for the schedule.
   // We decided to split a fullMinute for these instantaneous trips

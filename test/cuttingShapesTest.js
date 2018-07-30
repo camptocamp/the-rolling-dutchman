@@ -5,9 +5,8 @@ import {
   createFragmentsForStopTimes,
   FractionedShape,
   FragmentedTrip,
-  differenceInMinutes,
+  differenceInSeconds,
   toMinutes,
-  dropSeconds,
   removeDuplicatesInSortedShape
 } from '../src/modules/dataImport/cuttingShapes';
 const assert = require('assert');
@@ -54,22 +53,22 @@ describe('to Minutes', () => {
   })
 })
 
-describe('differenceInMinutes', () => {
+describe('differenceInSeconds', () => {
   const hour = '08:11:00';
   const hour2 = '08:15:00';
   const hour3 = '08:15:43';
   const hour4 = '09:08:00';
   it('should throw an error if the difference an inversion in the time is probable', () => {
-    assert.throws(() => differenceInMinutes(hour2, hour), Error);
+    assert.throws(() => differenceInSeconds(hour2, hour), Error);
   })
   it('should return the correct difference', () => {
-    assert.equal(differenceInMinutes(hour, hour2), 4);
+    assert.equal(differenceInSeconds(hour, hour2), 4 * 60);
   })
   it('should return the result in minutes', () => {
-    assert.equal(differenceInMinutes(hour, hour4), 57);
+    assert.equal(differenceInSeconds(hour, hour4), 57 * 60);
   })
-  it('should not care about seconds', () => {
-    assert.equal(differenceInMinutes(hour, hour3), 4);
+  it('should care about seconds', () => {
+    assert.equal(differenceInSeconds(hour, hour3), (4 * 60) + 43);
   })
 })
 
@@ -78,9 +77,6 @@ describe('createFragmentsForStopTimes', () => {
   const hour2 = '08:13:00';
   const hour3 = '12:15:00';
   const hour4 = '12:22:00';
-  const strippedHour1 = dropSeconds(hour1);
-  const strippedHour2 = dropSeconds(hour2);
-  const strippedHour3 = dropSeconds(hour3);
   const stopTimes1 = [mockUpStopTime(hour1, hour1, 0, 1),
     mockUpStopTime(hour2, hour2, 1, 2), mockUpStopTime(hour3, hour4, 3, 3)
   ];
@@ -88,24 +84,24 @@ describe('createFragmentsForStopTimes', () => {
   const shapeDist = numbersToShapePoints([0, 1, 3]);
   const firstResult = {
     "0,1": [{
-      startTime: strippedHour1,
+      startTime: hour1,
       tripId: undefined,
       timeIdleAtEnd: 0,
-      travelTime: 2
+      travelTime: 2 * 60
     }],
     "1,2": [{
-      startTime: strippedHour2,
+      startTime: hour2,
       tripId: undefined,
-      timeIdleAtEnd: 7,
-      travelTime: 242
+      timeIdleAtEnd: 7 * 60,
+      travelTime: 242 * 60
     }]
   };
   const secondResult = {
     "0,2": [{
-      startTime: strippedHour1,
+      startTime: hour1,
       tripId: undefined,
       timeIdleAtEnd: 0,
-      travelTime: 2
+      travelTime: 2 * 60
     }]
   };
   it('should not leave shape Dictionary unchanged', () => {
