@@ -16,7 +16,7 @@ Download from [here](https://transitfeeds.com/p/stadt-wien/888/20180119/download
 
 ### Netherlands dataset
 
-Download from [here]https://transitfeeds.com/p/ov/814/latest) and save to `data/Netherlands/gtfs.zip`.
+Download from [here](https://transitfeeds.com/p/ov/814/latest) and save to `data/Netherlands/gtfs.zip`.
 
 ### Tadao dataset
 Tadao is under a NDA. For CampToCamp users save to `data/Tadao/GTFS_Hiver_au_03-09-2018.zip`
