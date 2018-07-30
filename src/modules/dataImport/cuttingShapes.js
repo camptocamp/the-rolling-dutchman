@@ -154,6 +154,55 @@ function splitShape(shapePoints, stopTimes) {
   return splitShapeUsingSequence(shapeSequences, stopTimes);
 }
 /**
+ * Function which replaces stopTimes given 0 travelTime from startIndex to endIndex
+ * @param {} stopTimes
+ * @param {*} startIndex
+ * @param {*} endIndex
+ */
+function replaceStopTimesSchedule(stopTimes, startIndex, endIndex) {
+  const { departure_time } = stopTimes[startIndex];
+  // We assume that 0 seconds travelTrip exists because GTFS providers
+  // do not care about seconds for the schedule.
+  // We decided to split a fullMinute for these instantaneous trips
+  const tripDuration = 60;
+  const secondsToAdd = Math.floor(tripDuration / (endIndex - startIndex));
+  for (let currentIndex = startIndex + 1; currentIndex < endIndex; currentIndex += 1) {
+    const hhmmss = departure_time.split(':');
+    const seconds = parseInt(hhmmss[2], 10);
+    const newSeconds = seconds + ((currentIndex - startIndex) * secondsToAdd);
+    const newhhmmss = [hhmmss[0], hhmmss[1], newSeconds.toString()].join(':');
+    stopTimes[currentIndex].arrival_time = newhhmmss;
+    stopTimes[currentIndex].departure_time = newhhmmss;
+  }
+}
+
+function addSecondsForInstantaneousTrips(stopTimes) {
+  let currentIndex = 1;
+  let instantaneousTripDetected = false;
+  let lastDepartureTime = stopTimes[0].departure_time;
+  let indexOfStartingInstantaneousTrip = -1;
+  while (currentIndex < stopTimes.length) {
+    if (!instantaneousTripDetected) {
+      if (stopTimes[currentIndex].arrival_time === lastDepartureTime) {
+        instantaneousTripDetected = true;
+        indexOfStartingInstantaneousTrip = currentIndex - 1;
+        lastDepartureTime = stopTimes[indexOfStartingInstantaneousTrip].departure_time;
+      } else {
+        lastDepartureTime = stopTimes[currentIndex].departure_time;
+      }
+    } else if (stopTimes[currentIndex].arrival_time !== lastDepartureTime) {
+      instantaneousTripDetected = false;
+      lastDepartureTime = stopTimes[currentIndex].departure_time;
+      replaceStopTimesSchedule(stopTimes, indexOfStartingInstantaneousTrip, currentIndex);
+    }
+    currentIndex += 1;
+  }
+  if (instantaneousTripDetected) {
+    replaceStopTimesSchedule(stopTimes, indexOfStartingInstantaneousTrip, currentIndex);
+  }
+}
+
+/**
  * Use the shared information of shape_dist_traveled in GTFS shapes and GTFS stop_times
  * to cut the shape in smaller parts containing fragmented trips
  * @param {} fractionedShape
@@ -162,6 +211,7 @@ function splitShape(shapePoints, stopTimes) {
  */
 function createFragmentsForStopTimes(fractionedShape, shapePoints, stopTimes) {
   const stopTimesSorted = stopTimes.sort((a, b) => a.stop_sequence - b.stop_sequence);
+  addSecondsForInstantaneousTrips(stopTimesSorted);
   const splittedShape = splitShape(shapePoints, stopTimesSorted);
   let startIndex = 0;
   let endIndex = 0;
@@ -180,7 +230,7 @@ function createFragmentsForStopTimes(fractionedShape, shapePoints, stopTimes) {
       idleTimeAtTheEnd = departureSeconds - arrivalSeconds;
     }
     if (stopTimesSorted[index].departure_time === stopTimesSorted[index + 1].arrival_time) {
-      console.log('travelTime of zero');
+      throw Error(`travelTime of zero found at index ${index} in trip_id ${stopTimes.trip_id}`);
     }
     const fragmentedTrip = new FragmentedTrip(
       stopTimesSorted[index].departure_time,
