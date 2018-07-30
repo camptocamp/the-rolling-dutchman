@@ -123,9 +123,9 @@ async function exportScheduleToGeoJSON() {
       getOutputFileOfBatch(configPath, config.outputPathForSchedule, batchNumber),
       JSON.stringify(schedule),
     );
+    console.log(`${(batchNumber * BATCH_SIZE) + shapesIds.length} of ${totalShapes} shapes processed`);
     shapesIds = remaining;
     batchNumber += 1;
-    console.log(`${batchNumber * BATCH_SIZE} of ${totalShapes} shapes processed`);
   }
   console.log(`schedule written in directory \
   ${getDirectoryName(configPath, config.outputPathForSchedule)}`);

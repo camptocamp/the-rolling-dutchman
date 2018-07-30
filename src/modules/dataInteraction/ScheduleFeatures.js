@@ -4,7 +4,7 @@ import * as turf from '@turf/turf';
 import crossfilter from 'crossfilter2';
 import {
   pointToGeoJSONFeature,
-  getDateFromHHMM,
+  getDateFromHHMMSS,
   flattenArray,
   featuresToGeoJSON,
 } from './utils';
@@ -21,16 +21,16 @@ function getPerformanceLikeFromDate(date, referenceDate, millisecondsTimeStamp) 
   return differenceInMilliseconds(date, referenceDate) + millisecondsTimeStamp;
 }
 
-function getPerformanceLikeFromHHMM(HHMM, referenceDate, millisecondsTimeStamp) {
+function getPerformanceLikeFromHHMMSS(HHMMSS, referenceDate, millisecondsTimeStamp) {
   return getPerformanceLikeFromDate(
-    getDateFromHHMM(HHMM, referenceDate),
+    getDateFromHHMMSS(HHMMSS, referenceDate),
     referenceDate,
     millisecondsTimeStamp,
   );
 }
 
-function minutesInMilliseconds(minutes) {
-  return minutes * 60 * 1000;
+function secondsInMilliseconds(seconds) {
+  return seconds * 1000;
 }
 
 function GeoJSONToCrossFilterFacts(geojson, referenceDate, millisecondsTimeStamp) {
@@ -38,13 +38,13 @@ function GeoJSONToCrossFilterFacts(geojson, referenceDate, millisecondsTimeStamp
   // c.f docs -> https://www.mapbox.com/mapbox-gl-js/api/#map#queryrenderedfeatures
   const trips = JSON.parse(geojson.properties.trips);
   return trips.map((trip) => {
-    const begin = getPerformanceLikeFromHHMM(
+    const begin = getPerformanceLikeFromHHMMSS(
       trip.startTime,
       referenceDate,
       millisecondsTimeStamp,
     );
-    const end = begin + minutesInMilliseconds(trip.travelTime);
-    const endIdleTime = end + minutesInMilliseconds(trip.timeIdleAtEnd);
+    const end = begin + secondsInMilliseconds(trip.travelTime);
+    const endIdleTime = end + secondsInMilliseconds(trip.timeIdleAtEnd);
     return {
       trip,
       coordinates: geojson.geometry.coordinates,
