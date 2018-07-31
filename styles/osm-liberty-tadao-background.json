@@ -1,0 +1,90 @@
+{
+  "version": 8,
+  "name": "tadao GTFS with tadao background",
+  "metadata": {
+    "mapbox:type": "template"
+  },
+  "sources": {
+    "GTFS_Vector": {
+      "type": "vector",
+      "url": "http://localhost:8080/data/merged.json"
+    },
+    "tadao_noir_et_blanc": {
+      "type": "raster",
+      "tiles": [
+        "http://carto.tadao.fr/tadao/tiles/1.0.0/osm_default/default/2018/mercator/{z}/{x}/{y}.png"
+      ],
+      "minzoom": 9,
+      "maxzoom": 14
+    }
+  },
+  "sprite": "https://rawgit.com/lukasmartinelli/osm-liberty/gh-pages/sprites/osm-liberty",
+  "glyphs": "https://orangemug.github.io/font-glyphs/glyphs/{fontstack}/{range}.pbf",
+  "layers": [
+    {
+      "id": "shapes_fragmented",
+      "type": "line",
+      "source": "GTFS_Vector",
+      "source-layer": "schedule",
+      "minzoom": 12,
+      "maxzoom": 16,
+      "paint": {
+        "line-color": "rgba(82, 2, 140, 1)"
+      }
+    },
+    {
+      "id": "stops",
+      "type": "circle",
+      "source": "GTFS_Vector",
+      "source-layer": "stops",
+      "minzoom": 0,
+      "maxzoom": 18,
+      "paint": {
+        "circle-stroke-color": "rgba(6, 177, 174, 1)",
+        "circle-color": "rgba(7, 183, 49, 1)",
+        "circle-radius": {
+          "stops": [
+            [
+              10,
+              3
+            ],
+            [
+              10,
+              2
+            ],
+            [
+              13,
+              4
+            ],
+            [
+              17,
+              5
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "id": "routes",
+      "type": "line",
+      "source": "GTFS_Vector",
+      "source-layer": "Tadao_gtfs",
+      "minzoom": 5,
+      "maxzoom": 12,
+      "filter": [
+        "all"
+      ],
+      "layout": {},
+      "paint": {
+        "line-color": "rgba(24, 140, 46, 1)",
+        "line-width": 1
+      }
+    },
+    {
+      "id": "background",
+      "type": "raster",
+      "source": "tadao_noir_et_blanc"
+    }
+  ],
+  "id": "osm-liberty"
+}

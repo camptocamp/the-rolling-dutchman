@@ -4,7 +4,7 @@ import {
   showFragmentedShapeBeginAndEnd,
   clickToSeeBuses,
 } from './modules/dataInteraction/debug';
-import { initSources } from './modules/dataInteraction/ScheduleFeatures';
+import { initSources  } from './modules/dataInteraction/ScheduleFeatures';
 
 
 function initMap(style, center, zoom) {
@@ -18,6 +18,20 @@ function initMap(style, center, zoom) {
   clickToSeeBuses(map);
   showFragmentedShapeBeginAndEnd(map);
   map.on('load', () => initSources(map));
+  map.on('load', () => {
+    map.addLayer({
+      id: 'wms-test-layer',
+      type: 'raster',
+      source: {
+        type: 'raster',
+        tiles: [
+          'http://carto.tadao.fr/tadao/wsgi/mapserv_proxy?ogcserver=source+for+image%2Fpng&bbox={bbox-epsg-3857}&format=image/png&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&srs=EPSG:3857&width=256&height=256&layers=arret',
+        ],
+        tileSize: 256,
+      },
+      paint: {},
+    });
+  });
 }
 
 async function getConfig(path) {
