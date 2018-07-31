@@ -4,7 +4,7 @@ import {
   showFragmentedShapeBeginAndEnd,
   clickToSeeBuses,
 } from './modules/dataInteraction/debug';
-import { initSources  } from './modules/dataInteraction/ScheduleFeatures';
+import { initSources } from './modules/dataInteraction/ScheduleFeatures';
 
 
 function initMap(style, center, zoom) {
@@ -17,10 +17,25 @@ function initMap(style, center, zoom) {
   map.showTileBoundaries = true;
   clickToSeeBuses(map);
   showFragmentedShapeBeginAndEnd(map);
-  map.on('load', () => initSources(map));
   map.on('load', () => {
     map.addLayer({
-      id: 'wms-test-layer',
+      id: 'wms-itinerary-layer',
+      type: 'raster',
+      source: {
+        type: 'raster',
+        tiles: [
+          'http://carto.tadao.fr/tadao/wsgi/mapserv_proxy?ogcserver=source+for+image%2Fpng&bbox={bbox-epsg-3857}&format=image/png&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&srs=EPSG:3857&width=256&height=256&layers=itineraire',
+        ],
+        tileSize: 256,
+      },
+      paint: {
+        'raster-opacity': 0.8,
+      },
+    });
+  });
+  map.on('load', () => {
+    map.addLayer({
+      id: 'wms-stop-layer',
       type: 'raster',
       source: {
         type: 'raster',
@@ -29,9 +44,12 @@ function initMap(style, center, zoom) {
         ],
         tileSize: 256,
       },
-      paint: {},
+      paint: {
+        'raster-opacity': 0.8,
+      },
     });
   });
+  map.on('load', () => initSources(map));
 }
 
 async function getConfig(path) {
