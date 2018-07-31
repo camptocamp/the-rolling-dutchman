@@ -58,6 +58,7 @@ async function getServicesActiveOnWeekday(weekDay) {
 async function getIdsOfServicesActiveAtMoment(momentInstance) {
   const day = momentInstance.day();
   const weekDay = intToWeekday(day);
+  const servicesasdf = await gtfs.getCalendars();
   const services = await getServicesActiveOnWeekday(weekDay);
   const servicesActives = services.filter((service) => {
     // margin for the isBetween
@@ -68,7 +69,7 @@ async function getIdsOfServicesActiveAtMoment(momentInstance) {
     return momentInstance.isBetween(startDate, endDate);
   });
   const todayString = momentInstance.format('YYYYMMDD');
-  const serviceExceptions = await gtfs.getCalendarDates({ momentInstance: todayString });
+  const serviceExceptions = await gtfs.getCalendarDates({ date: todayString });
   const servicesIds = servicesActives.map(service => service.service_id);
   serviceExceptions.forEach((service) => {
     if (service.exception_type === 1) {
