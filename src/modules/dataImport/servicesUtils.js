@@ -58,7 +58,6 @@ async function getServicesActiveOnWeekday(weekDay) {
 async function getIdsOfServicesActiveAtMoment(momentInstance) {
   const day = momentInstance.day();
   const weekDay = intToWeekday(day);
-  const servicesasdf = await gtfs.getCalendars();
   const services = await getServicesActiveOnWeekday(weekDay);
   const servicesActives = services.filter((service) => {
     // margin for the isBetween
