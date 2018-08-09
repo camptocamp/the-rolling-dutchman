@@ -267,10 +267,12 @@ function removeDuplicatesInSortedShape(shapePoints) {
 * an array of array -> each element of the array is a trip i.e an array of
 * stoptimes with shape_dist_traveled
 */
-// returns a fractionShape with empty dictionary if stopTimesList is emptym can be a problem
+// returns a fractionShape with empty dictionary if stopTimesList is empty can be a problem
 function fractionShape(shapePoints, stopTimesList) {
   sortShape(shapePoints);
-  const shapePointsFiltered = removeDuplicatesInSortedShape(shapePoints);
+  const shapePointsFiltered = shapePoints; //removeDuplicatesInSortedShape(shapePoints);
+  // removeDuplicates can cause bugs, it may removes the corresponding shapeDistTraveled 
+  // leading to a false fractioning of the shape 
   const fractionedShape = new FractionedShape(shapePointsFiltered);
   stopTimesList.forEach((stopTimes) => {
     createFragmentsForStopTimes(fractionedShape, shapePointsFiltered, stopTimes);

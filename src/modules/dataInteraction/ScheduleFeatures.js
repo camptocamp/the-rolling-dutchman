@@ -110,12 +110,28 @@ class ScheduleFeatures {
  * Using the library turf, compute the point along the fragmented shape using the activeTrip
  * and the current timeStamp.
  * Returns undefined is the timeStamp is before the activeTrip (When the time is going back)
+ * or when the trip is not on this tile (length traveled does not correspond to a value
+ * between the entry and exit of the tile)
  * @param {*} activeTrip
  * @param {*} timeStamp
  */
 function getPointFromActiveTrip(activeTrip, timeStamp) {
   if (activeTrip.length === 0) {
     return [];
+  }
+  const millisecondsPassed = timeStamp - activeTrip.begin;
+  let fractionTraveled = millisecondsPassed / (activeTrip.end - activeTrip.begin);
+  if (fractionTraveled < 0) {
+    return undefined;
+  }
+  // this happens when the bus are idle at a stop
+  if (fractionTraveled > 1) {
+    fractionTraveled = 1;
+  }
+  const distanceTraveled = activeTrip.properties.shapeLength * fractionTraveled;
+  if (distanceTraveled > activeTrip.properties.lengthAtExit ||
+    distanceTraveled < activeTrip.properties.lengthAtEntry) {
+    return undefined;
   }
   let coords = activeTrip.coordinates;
   const options = {
@@ -130,17 +146,8 @@ function getPointFromActiveTrip(activeTrip, timeStamp) {
     coords = flattenArray(coords);
     lineString = turf.lineString(coords);
   }
-  const lengthOfLineString = turf.length(lineString);
-  const millisecondsPassed = timeStamp - activeTrip.begin;
-  let fractionTraveled = millisecondsPassed / (activeTrip.end - activeTrip.begin);
-  if (fractionTraveled < 0) {
-    return undefined;
-  }
-  // this happens when the bus are idle at a stop
-  if (fractionTraveled > 1) {
-    fractionTraveled = 1;
-  }
-  const geojsonPoint = turf.along(lineString, lengthOfLineString * fractionTraveled, options);
+  const distanceTraveledInTheTile = distanceTraveled - activeTrip.properties.lengthAtEntry;
+  const geojsonPoint = turf.along(lineString, distanceTraveledInTheTile, options);
   const properties = Object.assign({
     begin: coords[0],
     end: coords[coords.length - 1],

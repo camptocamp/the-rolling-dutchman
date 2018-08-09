@@ -1,6 +1,6 @@
 import * as turf from '@turf/turf';
 import SphericalMercator from '@mapbox/sphericalmercator';
-import {isNumber,} from 'util';
+import { isNumber  } from 'util';
 
 const readline = require('readline');
 const fs = require('fs');
@@ -34,21 +34,32 @@ class ClippedFeature {
     this.addPoint(coord);
   }
   toGeoJSON() {
-    const geojson = turf.lineString(this.coords);
-    Object.assign(geojson.properties, this.originalFeature.properties);
-    const shapeLength = turf.length(this.originalFeature);
-    const coordsAtEntry = turf.getCoords(this.originalFeature).slice(0, this.indexOfEntry);
-    coordsAtEntry.push(this.entryCoord);
-    let lengthAtEntry = 0;
-    if (coordsAtEntry.length > 1) {
-      lengthAtEntry = turf.length(turf.lineString(coordsAtEntry));
+    try {
+      if (this.coords.length < 2) {
+        const fakeShape = turf.lineString(this.originalFeature.geometry.coordinates);
+        fakeShape.geometry.coordinates = [];
+        return fakeShape;
+      }
+      const geojson = turf.lineString(this.coords);
+      Object.assign(geojson.properties, this.originalFeature.properties);
+      const shapeLength = turf.length(this.originalFeature);
+      const coordsAtEntry = turf.getCoords(this.originalFeature).slice(0, this.indexOfEntry);
+      coordsAtEntry.push(this.entryCoord);
+      let lengthAtEntry = 0;
+      if (coordsAtEntry.length > 1) {
+        lengthAtEntry = turf.length(turf.lineString(coordsAtEntry));
+      }
+      const lengthAtExit = lengthAtEntry + turf.length(geojson);
+      geojson.properties.lengthAtEntry = lengthAtEntry;
+      geojson.properties.lengthAtExit = lengthAtExit;
+      geojson.properties.shapeLength = shapeLength;
+      geojson.tippecanoe = this.originalFeature.tippecanoe;
+      return geojson;
+    } catch (error) {
+      fs.appendFileSync('errors.txt', `coords: ${this.coords}, \
+      originalFeaturesCoord: ${this.originalFeature.geometry.coordinates}, error: ${error}`);
+      throw Error(`error at shape ${this.originalFeature.properties.parentShapeId}: ${error} `);
     }
-    const lengthAtExit = lengthAtEntry + turf.length(geojson);
-    geojson.properties.lengthAtEntry = lengthAtEntry;
-    geojson.properties.lengthAtExit = lengthAtExit;
-    geojson.properties.shapeLength = shapeLength;
-    geojson.tippecanoe = this.originalFeature.tippecanoe;
-    return geojson;
   }
 }
 
@@ -70,12 +81,7 @@ function handleDoubleCrossing(intersectionPoints, newFeaturesClipped, indexOfCoo
 }
 
 function clipLineStringToBbox(originalFeature, bbox, x, y, z) {
-  let coords;
-  try {
-    coords = turf.getCoords(originalFeature);
-  } catch (error) {
-    fs.appendFileSync('errors.txt', `x: ${x}, y: ${y}, z_ ${z} error at  getCoords ${error} at coords ${JSON.stringify(originalFeature)}\n`);
-  }
+  const coords = turf.getCoords(originalFeature);
   const newFeaturesClipped = [];
   bbox.forEach((element) => {
     if (!isNumber(element)) {
@@ -114,6 +120,11 @@ function clipLineStringToBbox(originalFeature, bbox, x, y, z) {
       newFeaturesClipped[newFeaturesClipped.length - 1].addPoint(coords[index]);
     }
   }
+  newFeaturesClipped.forEach((clippedFeature) => {
+    if (clippedFeature.coords.length === 1) {
+      fs.appendFileSync('bboxes.txt', `x ${x}, y ${y}, z ${z}, bbox ${JSON.stringify(bbox)}`);
+    }
+  });
   return newFeaturesClipped;
 }
 
@@ -198,11 +209,12 @@ function main() {
     output: process.stdout,
   });
   const bbox = merc.bbox(x, y, z);
-  fs.appendFile('bboxes.txt', `x: ${x}, y: ${y}, z: ${z}, bbox: ${JSON.stringify(bbox)} \n`);
   rl.on('line', (line) => {
-    fs.appendFileSync('lines.txt', `${line}\n`);
     const geojson = JSON.parse(line);
-    if (geojson.coords.length !== 0) {
+    // coordinates are empty array when they are not in the bounding box
+    // TODO be sure at 100% about this
+    if (geojson.geometry.coordinates.length !== 0) {
+      fs.appendFileSync('lines.txt', line);
       const clippedFeatures = clipLineStringToBbox(geojson, bbox, x, y, z);
       clippedFeatures.forEach((element) => {
         console.log(JSON.stringify(element.toGeoJSON()));
@@ -211,7 +223,7 @@ function main() {
   });
 }
 
+
 if (typeof require !== 'undefined' && require.main === module) {
-  unitTest();
-  // main()
+  main();
 }

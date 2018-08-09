@@ -111,8 +111,8 @@ async function exportScheduleToGeoJSON() {
   await connect(config.mongoUrl);
   const servicesIds = await getServicesIds(config);
   const agencyKeys = config.agencies.map(agency => agency.agency_key);
-  // let shapesIds = await gtfs.getShapeIds();
-  let shapesIds = ['575491'];
+  let shapesIds = await gtfs.getShapeIds();
+  //let shapesIds = ['696787'];
   const totalShapes = shapesIds.length;
   // const filteredShapes = shapes.filter((shape, index) => (index % 10) === 0);
   let batchNumber = 0;
