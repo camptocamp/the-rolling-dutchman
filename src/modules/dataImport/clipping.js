@@ -1,6 +1,6 @@
 import * as turf from '@turf/turf';
 import SphericalMercator from '@mapbox/sphericalmercator';
-import { isNumber  } from 'util';
+import { isNumber } from 'util';
 
 const readline = require('readline');
 const fs = require('fs');
@@ -20,11 +20,14 @@ function bboxToLineString(bbox) {
 }
 
 class ClippedFeature {
-  constructor(entryCoord, originalFeature, indexOfEntry) {
+  constructor(entryCoord, originalFeature, indexOfEntry, tileX, tileY, tileZ) {
     this.entryCoord = entryCoord;
     this.originalFeature = originalFeature;
     this.indexOfEntry = indexOfEntry;
     this.coords = [entryCoord];
+    this.tileX = tileX;
+    this.tileY = tileY;
+    this.tileZ = tileZ;
   }
   addPoint(coord) {
     this.coords.push(coord);
@@ -34,48 +37,51 @@ class ClippedFeature {
     this.addPoint(coord);
   }
   toGeoJSON() {
-    try {
-      if (this.coords.length < 2) {
-        const fakeShape = turf.lineString(this.originalFeature.geometry.coordinates);
-        fakeShape.geometry.coordinates = [];
-        return fakeShape;
-      }
-      const geojson = turf.lineString(this.coords);
-      Object.assign(geojson.properties, this.originalFeature.properties);
-      const shapeLength = turf.length(this.originalFeature);
-      const coordsAtEntry = turf.getCoords(this.originalFeature).slice(0, this.indexOfEntry);
-      coordsAtEntry.push(this.entryCoord);
-      let lengthAtEntry = 0;
-      if (coordsAtEntry.length > 1) {
-        lengthAtEntry = turf.length(turf.lineString(coordsAtEntry));
-      }
-      const lengthAtExit = lengthAtEntry + turf.length(geojson);
-      geojson.properties.lengthAtEntry = lengthAtEntry;
-      geojson.properties.lengthAtExit = lengthAtExit;
-      geojson.properties.shapeLength = shapeLength;
-      geojson.tippecanoe = this.originalFeature.tippecanoe;
-      return geojson;
-    } catch (error) {
-      fs.appendFileSync('errors.txt', `coords: ${this.coords}, \
-      originalFeaturesCoord: ${this.originalFeature.geometry.coordinates}, error: ${error}`);
-      throw Error(`error at shape ${this.originalFeature.properties.parentShapeId}: ${error} `);
+    if (this.originalFeature.geometry.coordinates.length < 2) {
+      fs.appendFileSync('errors.txt', `error at tile ${this.tileZ}/${this.tileX}/${this.tileY}, the originalFeature \
+      contained not enough point: ${JSON.stringify(this.originalFeature)}`);
+      // return a fake geojson to avoid errors in tippecanoe
+      const fakeShape = turf.lineString([[0, 0], [0, 1]]);
+      fakeShape.geometry.coordinates = [];
+      return fakeShape;
     }
+    const geojson = turf.lineString(this.coords);
+    Object.assign(geojson.properties, this.originalFeature.properties);
+    const shapeLength = turf.length(this.originalFeature);
+    const coordsAtEntry = turf.getCoords(this.originalFeature).slice(0, this.indexOfEntry);
+    coordsAtEntry.push(this.entryCoord);
+    let lengthAtEntry = 0;
+    if (coordsAtEntry.length > 1) {
+      lengthAtEntry = turf.length(turf.lineString(coordsAtEntry));
+    }
+    const lengthAtExit = lengthAtEntry + turf.length(geojson);
+    geojson.properties.lengthAtEntry = lengthAtEntry;
+    geojson.properties.lengthAtExit = lengthAtExit;
+    geojson.properties.shapeLength = shapeLength;
+    geojson.tippecanoe = this.originalFeature.tippecanoe;
+    return geojson;
   }
 }
 
-function handleSimpleCrossing(intersectionPoints, insideBbox, newFeaturesClipped, indexOfCoord, originalFeature) {
+function handleSimpleCrossing(
+  intersectionPoints, insideBbox, newFeaturesClipped,
+  indexOfCoord, originalFeature, x, y, z,
+) {
   const coord = turf.getCoord(intersectionPoints.features[0]);
   if (insideBbox) {
     newFeaturesClipped[newFeaturesClipped.length - 1].addExitPoint(coord, indexOfCoord);
   } else {
-    newFeaturesClipped.push(new ClippedFeature(coord, originalFeature, indexOfCoord));
+    newFeaturesClipped.push(new ClippedFeature(coord, originalFeature, indexOfCoord, x, y, z));
   }
 }
 
-function handleDoubleCrossing(intersectionPoints, newFeaturesClipped, indexOfCoord, originalFeature) {
+function handleDoubleCrossing(
+  intersectionPoints, newFeaturesClipped,
+  indexOfCoord, originalFeature, x, y, z,
+) {
   const coordEntry = turf.getCoord(intersectionPoints.features[0]);
   const coordExit = turf.getCoord(intersectionPoints.features[1]);
-  const clippedFeature = new ClippedFeature(coordEntry, originalFeature, indexOfCoord);
+  const clippedFeature = new ClippedFeature(coordEntry, originalFeature, indexOfCoord, x, y, z);
   clippedFeature.addExitPoint(coordExit, indexOfCoord);
   newFeaturesClipped.push(clippedFeature);
 }
@@ -93,7 +99,7 @@ function clipLineStringToBbox(originalFeature, bbox, x, y, z) {
   const firstPoint = turf.point(coords[0]);
   let insideBbox = turf.booleanContains(bboxPolygon, firstPoint);
   if (insideBbox) {
-    newFeaturesClipped.push(new ClippedFeature(coords[0], originalFeature, 0));
+    newFeaturesClipped.push(new ClippedFeature(coords[0], originalFeature, 0, x, y, z));
   }
   for (let index = 1; index < coords.length; index += 1) {
     const currentLine = turf.lineString([coords[index - 1], coords[index]]);
@@ -103,14 +109,20 @@ function clipLineStringToBbox(originalFeature, bbox, x, y, z) {
         case 0:
           throw Error('at least one intersection Point is expected if a lineString crosses the bboxPolygon');
         case 1:
-          handleSimpleCrossing(intersectionPoints, insideBbox, newFeaturesClipped, index, originalFeature);
+          handleSimpleCrossing(
+            intersectionPoints, insideBbox, newFeaturesClipped, index, originalFeature,
+            x, y, z,
+          );
           insideBbox = !insideBbox;
           break;
         case 2:
           if (insideBbox) {
             throw Error('did not expect a line whose first endpoint is inside a bbox to cross it mutliple times');
           }
-          handleDoubleCrossing(intersectionPoints, newFeaturesClipped, index, originalFeature);
+          handleDoubleCrossing(
+            intersectionPoints, newFeaturesClipped,
+            index, originalFeature, x, y, z,
+          );
           break;
         default:
           throw Error('a line must cross a bounding box between 0 and 2 times');
@@ -214,7 +226,7 @@ function main() {
     // coordinates are empty array when they are not in the bounding box
     // TODO be sure at 100% about this
     if (geojson.geometry.coordinates.length !== 0) {
-      fs.appendFileSync('lines.txt', line);
+      fs.appendFileSync('lines.txt', `${line} \n`);
       const clippedFeatures = clipLineStringToBbox(geojson, bbox, x, y, z);
       clippedFeatures.forEach((element) => {
         console.log(JSON.stringify(element.toGeoJSON()));
