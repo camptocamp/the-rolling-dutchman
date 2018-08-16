@@ -152,25 +152,3 @@ function arrayCoordsToArrayShapeLonLat(array) {
     }
   });
 }
-
-describe('the function removeDuplicatesInSortedShape', () => {
-  const array = [
-    [1, 1],
-    [1, 2],
-    [1, 2],
-    [3, 3],
-    [4, 4]
-  ];
-  const newArray = arrayCoordsToArrayShapeLonLat(array);
-  it('should filter following duplicates with same lon lat in an array', () => {
-    assert.deepEqual(
-      removeDuplicatesInSortedShape(newArray),
-      arrayCoordsToArrayShapeLonLat([
-        [1, 1],
-        [1, 2],
-        [3, 3],
-        [4, 4]
-      ])
-    );
-  })
-})

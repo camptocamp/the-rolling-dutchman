@@ -97,7 +97,7 @@ class ScheduleFeatures {
    * @param {virtualClock timestamp} timeStamp
    */
   getActiveTrips(timeStamp) {
-    if (this.activeTrips === undefined || this.counter === 60) {
+    if (this.activeTrips === undefined || this.counter === 1) {
       this.updateFilters(timeStamp);
       this.counter = 0;
       this.activeTrips = this.schedule.allFiltered();
