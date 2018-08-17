@@ -14,13 +14,13 @@ E.g. shapes going from stop A (*stop_sequence 1*) to stop B (*stop\_sequence 2*)
 ## Installation
 
 * install docker, nodejs-8
-* if nodejs-8 cannot be installed, use docker pull node:8.11
+* if nodejs-8 cannot be installed, use `docker pull node:8.11`
 * install tippecanoe
-  - git clone git@github.com:mapbox/tippecanoe.git
-  - cd tippecanoe
-  - make -j
-  - sudo make install
-* git clone git@github.com:camptocamp/the-rolling-dutchman.git
+  - `git clone git@github.com:mapbox/tippecanoe.git`
+  - `cd tippecanoe`
+  - `make -j`
+  - `sudo make install`
+* `git clone git@github.com:camptocamp/the-rolling-dutchman.git`
 * cd the-rolling-dutchman
 * npm install (could take a long time)
 
@@ -111,6 +111,9 @@ replace configWien by configNetherlands or configTadao depending on the dataset 
 
 ### Launching the application
 
+To switch between dataset, change the value of alias in `configWeb.json` to the path of another config file.
+(e.g change field alias of config.json to configWebTadao.json).
+
 #### With node dockerized
 
 * change the content of the webpack.config.js with this
@@ -130,7 +133,7 @@ replace configWien by configNetherlands or configTadao depending on the dataset 
  
 Go to localhost:8000
 
-To switch between dataset, change the value of alias in `configWeb.json` to the path of another config file.
+
 
 ### Small precisions on config files
 

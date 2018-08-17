@@ -6,7 +6,7 @@
   "agencies": [
     {
       "agency_key": "Tadao_gtfs",
-      "path": "./data/Tadao/GTFS_Hiver_au_03-09-2018"
+      "path": "./data/Tadao/GTFS_Hiver_au_03-09-2018.zip"
     }
   ],
   "includeStops": false,
