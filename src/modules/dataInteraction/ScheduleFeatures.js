@@ -17,6 +17,8 @@ const layerWithScheduleId = 'shapes_fragmented';
 const endPointLayerId = 'endPointLayer';
 const endPointSourceId = 'endPointSource';
 
+const BUCKET_SIZE = 60 * 1000;
+
 function getPerformanceLikeFromDate(date, referenceDate, millisecondsTimeStamp) {
   return differenceInMilliseconds(date, referenceDate) + millisecondsTimeStamp;
 }
@@ -82,6 +84,21 @@ class ScheduleFeatures {
     this.beginDimension = this.schedule.dimension(d => d.begin);
     this.endDimension = this.schedule.dimension(d => d.endIdleTime);
     this.counter = 0;
+    this.buckets = [];
+    let sum = 0;
+    crossfilterFacts.forEach((fact) => {
+      const beginBucket = Math.floor(fact.begin / BUCKET_SIZE);
+      const endBucket = Math.floor(fact.endIdleTime / BUCKET_SIZE);
+      for (let i = beginBucket; i <= endBucket; i += 1) {
+        if (!this.buckets[i]) {
+          this.buckets[i] = [];
+        }
+        this.buckets[i].push(fact);
+        sum += 1;
+      }
+    });
+    console.log(sum / crossfilterFacts.length);
+    // debugger;
   }
   /**
    * update the filter on crossfilter data
@@ -97,12 +114,20 @@ class ScheduleFeatures {
    * @param {virtualClock timestamp} timeStamp
    */
   getActiveTrips(timeStamp) {
+    /*
     if (this.activeTrips === undefined || this.counter === 1) {
       this.updateFilters(timeStamp);
       this.counter = 0;
       this.activeTrips = this.schedule.allFiltered();
     }
     this.counter += 1;
+    return this.activeTrips;
+    */
+    const bucket = Math.floor(timeStamp / BUCKET_SIZE);
+    const trips = this.buckets[bucket] || [];
+    this.activeTrips = trips.filter((trip) => {
+      return trip.begin <= timeStamp && trip.endIdleTime >= timeStamp;
+    });
     return this.activeTrips;
   }
 }
@@ -148,10 +173,14 @@ function getPointFromActiveTrip(activeTrip, timeStamp) {
   }
   const distanceTraveledInTheTile = distanceTraveled - activeTrip.properties.lengthAtEntry;
   const geojsonPoint = turf.along(lineString, distanceTraveledInTheTile, options);
-  const properties = Object.assign({
+  // const properties = Object.assign({
+  //   begin: coords[0],
+  //   end: coords[coords.length - 1],
+  // }, activeTrip.properties);
+  const properties = {
     begin: coords[0],
     end: coords[coords.length - 1],
-  }, activeTrip.properties);
+  };
   return Object.assign(geojsonPoint, {
     properties,
   });
@@ -166,10 +195,11 @@ function getPointFromActiveTrip(activeTrip, timeStamp) {
  * @param {*} counter
  */
 function animateBuses(scheduleFeatures, map, timeStamp, virtualClock, counter) {
+  // console.time('animateBuses');
   virtualClock.updateTime(timeStamp);
-  if (counter % 60 === 0) {
+  // if (counter % 60 === 0) {
     virtualClock.updateSlider();
-  }
+  // }
   const virtualTime = virtualClock.getTime();
   const activeTrips = scheduleFeatures.getActiveTrips(virtualTime);
   const pointFeatures = activeTrips.map((activeTrip) => {
@@ -177,13 +207,16 @@ function animateBuses(scheduleFeatures, map, timeStamp, virtualClock, counter) {
   });
   const pointFeaturesFiltered = pointFeatures.filter(feature => feature !== undefined);
   const geojson = featuresToGeoJSON(pointFeaturesFiltered);
-  map.getSource(animatedBusesSourceId).setData(geojson);
+  // if (counter % 10 === 0) {
+    map.getSource(animatedBusesSourceId).setData(geojson);
+  // }
   requestAnimationFrame(timestamp => animateBuses(
     scheduleFeatures,
     map,
     timestamp,
     virtualClock, counter + 1,
   ));
+  // console.timeEnd('animateBuses');
 }
 
 

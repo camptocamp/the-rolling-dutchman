@@ -14,7 +14,7 @@ function initMap(style, center, zoom) {
     center,
     zoom,
   });
-  map.showTileBoundaries = true;
+  // map.showTileBoundaries = true;
   clickToSeeBuses(map);
   showFragmentedShapeBeginAndEnd(map);
   map.on('load', () => initSources(map));
