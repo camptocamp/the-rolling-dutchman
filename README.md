@@ -1,5 +1,5 @@
 # the-rolling-dutchman
-Master Project of Nataniel Hofer: Visualizing public transports in Netherlands (GTFS to vector tiles)
+Master Project of Nataniel Hofer: Visualizing public transports (GTFS to vector tiles)
 
 ## Precision on the expectation of GTFS
 The shapes.txt file is optional in GTFS. It is required here in order to work properly.
@@ -9,7 +9,25 @@ Currently two ways of fractioning the shapes are supported:
 * A second way, if there is no filed *shape\_dist\_traveled*, is to have the *shape\_pt\_sequence* in shapes.txt prefixed by the *stop\_sequence* in stop_times.txt:
 E.g. shapes going from stop A (*stop_sequence 1*) to stop B (*stop\_sequence 2*) must have their field *shape_pt_sequence* starting by "1".
 
+# INSTALL
+
+## Installation
+
+* install docker, nodejs-8
+* if nodejs-8 cannot be installed, use docker pull node:8.11
+* install tippecanoe
+  - git clone git@github.com:mapbox/tippecanoe.git
+  - cd tippecanoe
+  - make -j
+  - sudo make install
+* git clone git@github.com:camptocamp/the-rolling-dutchman.git
+* cd the-rolling-dutchman
+* npm install (could take a long time)
+
 ## GTFS data
+
+
+The `data` folder is in the .gitignore, you must create it and its subfolders. Place all the GTFS data in this folder.
 
 ### Vienna dataset
 Download from [here](https://transitfeeds.com/p/stadt-wien/888/20180119/download) and save to `data/Wien/gtfs.zip`.
@@ -21,37 +39,54 @@ Download from [here](https://transitfeeds.com/p/ov/814/latest) and save to `data
 ### Tadao dataset
 Tadao is under a NDA. For CampToCamp users save to `data/Tadao/GTFS_Hiver_au_03-09-2018.zip`
 
-## GTFS to GeoJSON conversion
+## Data import
+The pipeline is the following GTFS -> mongodb -> GeoJSON -> vector tiles. The following section explain in details what must be done for each step.
 
-### Import into mongodb
-Run mongodb:
+
+
+## GTFS -> mongodb
+
+### Dockerized mongodb
+* Run mongodb:
 
 ```
 docker run -p 27017:27017 -v $PWD/data/mongodb:/data/db -d mongo:3.6.6-jessie --setParameter cursorTimeoutMillis=1800000
 ```
+* Get IP address of MongoDB container and substitue it in the config.json you use (e.g. configTadao/config-tadao.json)
+* `docker run -it -v "${PWD}":/the-rolling-dutchman --rm -w /the-rolling-dutchman node:8.11 npm run import PATH_TO_CONFIG_FILE`
 
-Import into mongodb, e.g. for Vienna dataset:
+In practice, there was some issues when the computer was restarted. I had to import in mongodb again (error message: use of closed session is not allowed).
+Never encountered the issue with the non-dockerized version
 
-```
-npm run import configWien/configWien.json
-```
+### Non-dockerized mongodb
 
-### Extract GeoJSON files from data in mongodb
+* Follow the steps from https://docs.mongodb.com/manual/tutorial/install-mongodb-on-ubuntu/ to install mongodb
+* Run mongodb: `sudo service mongod start`
+* `npm run import PATH_TO_YOUR_CONFIG_FILE`
 
+## mongodb -> GeoJSON
+
+### Dockerized node v8
 The config files here are an extension of the config file for the data import in mongodb (See configNetherlands/config-Netherlands.json for an example)
-* ```node node_modules/gtfs-to-geojson/bin/gtfs-to-geojson.js --configPath PATH_TO_CONFIG_FILE  --skipImport```
+
+* `docker run -it -v "${PWD}":/the-rolling-dutchman --rm -w /the-rolling-dutchman node:8.11 node node_modules/gtfs-to-geojson/bin/gtfs-to-geojson.js --configPath PATH_TO_YOUR_CONFIG_FILE --skipImport`
+
+### Non-dockerized node v8
+
+* ```node node node_modules/gtfs-to-geojson/bin/gtfs-to-geojson.js --configPath PATH_TO_CONFIG_FILE  --skipImport```
 Will get the shapes to directory geojson -> does not contain the schedule. It is important to specify --skipImport to gain time.
-* ```npm run getStops PATH_TO_CONFIG_FILE```
+* ```npm run getStops PATH_TO_CONFIG_FILE``` :
 Will get the stops to a geojson file
-* ```npm run getSchedule PATH_TO_CONFIG_FILE```
+* ```npm run getSchedule PATH_TO_CONFIG_FILE``` :
 Will get the shapes with the schedules in a geojson file
+
 
 ### Merge GeoJSON
 
-The scripts getStops and getSchedule export the geojson in multiple batchs to gain time, use the following command to merge them back in one file:
-* ```node_modules/\@mapbox/geojson-merge/geojson-merge  PATH_TO_FILES > OUTPUT_FILE```
+The scripts getStops and getSchedule export the geojson in multiple batchs to gain time, use the following command to merge them back in one file: 
+* ```node node_modules/\@mapbox/geojson-merge/geojson-merge  PATH_TO_FILES > OUTPUT_FILE```
 
-## Generate vector tiles
+## GeoJSON -> vector tiles
 
 ### Parameters Used
 
@@ -65,10 +100,39 @@ We use [tippecanoe](https://github.com/mapbox/tippecanoe) to generate tiles. Tip
 
 ### Examples
 
-See or run `./configWien/generate_tiles`
+See or run `./configWien/generate_tiles`  
+replace configWien by configNetherlands or configTadao depending on the dataset you want to use
 
-## Run the web application
+## Launch the application
 
-* ```npm start```
+### Serve the tiles using tileserver-gl
 
-To switch between dataset, change the value of alias in `configWeb.json` to the path of another config file
+`docker run --rm -it -v $(pwd):/data -p 8080:80 klokantech/tileserver-gl merged.mbtiles`
+
+### Launching the application
+
+#### With node dockerized
+
+* change the content of the webpack.config.js with this
+```
+ 15   devServer: {
+ 16     contentBase: '.',
+ 17     host: '0.0.0.0',
+ 18     disableHostCheck: true,
+ 19     port : 8000
+ 20   },
+```
+* `docker run -v "${PWD}":/the-rolling-dutchman --rm -w /the-rolling-dutchman -d node:8.11 npm start`
+
+#### With non-dockerized node
+
+* `npm start`
+ 
+Go to localhost:8000
+
+To switch between dataset, change the value of alias in `configWeb.json` to the path of another config file.
+
+### Small precisions on config files
+
+There are two types of config files, both are json. Config files of the first types are in folders configNAME\_OF\_DATASET, they are used in the pipeline of the tile generation.
+The second type are at the root of the project and contains the substring 'Web'. They are used to select an initial zoom level and center for the map as well as a specific mapbox-style file.
