@@ -33,22 +33,22 @@ docker run -p 27017:27017 -v $PWD/data/mongodb:/data/db -d mongo:3.6.6-jessie --
 Import into mongodb, e.g. for Vienna dataset:
 
 ```
-npm run import configWien/config-Wien.json
+npm run import configWien/configWien.json
 ```
 
 ### Extract GeoJSON files from data in mongodb
 
 The config files here are an extension of the config file for the data import in mongodb (See configNetherlands/config-Netherlands.json for an example)
-* ```node node node_modules/gtfs-to-geojson/bin/gtfs-to-geojson.js --configPath PATH\_TO\_CONFIG\_FILE  --skipImport```
+* ```node node_modules/gtfs-to-geojson/bin/gtfs-to-geojson.js --configPath PATH_TO_CONFIG_FILE  --skipImport```
 Will get the shapes to directory geojson -> does not contain the schedule. It is important to specify --skipImport to gain time.
-* ```npm run getStops PATH\_TO\_CONFIG\_FILE```
+* ```npm run getStops PATH_TO_CONFIG_FILE```
 Will get the stops to a geojson file
-* ```npm run getSchedule PATH\_TO\_CONFIG\_FILE```
+* ```npm run getSchedule PATH_TO_CONFIG_FILE```
 Will get the shapes with the schedules in a geojson file
 
 ### Merge GeoJSON
 
-The scripts getStops and getSchedule export the geojson in multiple batchs to gain time, use the following command to merge them back in one file: 
+The scripts getStops and getSchedule export the geojson in multiple batchs to gain time, use the following command to merge them back in one file:
 * ```node_modules/\@mapbox/geojson-merge/geojson-merge  PATH_TO_FILES > OUTPUT_FILE```
 
 ## Generate vector tiles
