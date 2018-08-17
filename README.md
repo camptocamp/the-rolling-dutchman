@@ -13,8 +13,7 @@ E.g. shapes going from stop A (*stop_sequence 1*) to stop B (*stop\_sequence 2*)
 
 ## Installation
 
-* install docker, nodejs-8
-* if nodejs-8 cannot be installed, use `docker pull node:8.11`
+* install docker, nodejs version at least 8 (for async await support)
 * install tippecanoe
   - `git clone git@github.com:mapbox/tippecanoe.git`
   - `cd tippecanoe`
@@ -52,8 +51,7 @@ The pipeline is the following GTFS -> mongodb -> GeoJSON -> vector tiles. The fo
 ```
 docker run -p 27017:27017 -v $PWD/data/mongodb:/data/db -d mongo:3.6.6-jessie --setParameter cursorTimeoutMillis=1800000
 ```
-* Get IP address of MongoDB container and substitute it in the config.json you use (e.g. configTadao/config-tadao.json)
-* `docker run -it -v "${PWD}":/the-rolling-dutchman --rm -w /the-rolling-dutchman node:8.11 npm run import PATH_TO_CONFIG_FILE`
+* `npm run import PATH_TO_YOUR_CONFIG_FILE`
 
 In practice, there was some issues when the computer was restarted. I had to import in mongodb again (error message: use of closed session is not allowed).
 Never encountered the issue with the non-dockerized version
@@ -66,12 +64,7 @@ Never encountered the issue with the non-dockerized version
 
 ## mongodb -> GeoJSON
 
-### Dockerized node v8
 The config files here are an extension of the config file for the data import in mongodb (See configNetherlands/config-Netherlands.json for an example)
-
-* `docker run -it -v "${PWD}":/the-rolling-dutchman --rm -w /the-rolling-dutchman node:8.11 node node_modules/gtfs-to-geojson/bin/gtfs-to-geojson.js --configPath PATH_TO_YOUR_CONFIG_FILE --skipImport`
-
-### Non-dockerized node v8
 
 * ```node node node_modules/gtfs-to-geojson/bin/gtfs-to-geojson.js --configPath PATH_TO_CONFIG_FILE  --skipImport```
 Will get the shapes to directory geojson -> does not contain the schedule. It is important to specify --skipImport to gain time.
@@ -113,21 +106,6 @@ replace configWien by configNetherlands or configTadao depending on the dataset 
 
 To switch between dataset, change the value of alias in `configWeb.json` to the path of another config file.
 (e.g change field alias of config.json to configWebTadao.json).
-
-#### With node dockerized
-
-* change the content of the webpack.config.js with this
-```
- 15   devServer: {
- 16     contentBase: '.',
- 17     host: '0.0.0.0',
- 18     disableHostCheck: true,
- 19     port : 8000
- 20   },
-```
-* `docker run -v "${PWD}":/the-rolling-dutchman --rm -w /the-rolling-dutchman -d node:8.11 npm start`
-
-#### With non-dockerized node
 
 * `npm start`
  
