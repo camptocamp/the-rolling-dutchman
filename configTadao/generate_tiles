@@ -14,6 +14,7 @@ stopsLayer="stops"
 mergedMbTilesName="merged.mbtiles"
 
 tippecanoe -o $pathToTadaoOut$scheduleMbTilesName \
+-C '../clipFeatures.sh $1 $2 $3' \
 --minimum-zoom=12 --maximum-zoom=13 \
 -pk -pc -l $scheduleLayer \
 $pathToSchedule && \
