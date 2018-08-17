@@ -16,10 +16,10 @@ E.g. shapes going from stop A (*stop_sequence 1*) to stop B (*stop\_sequence 2*)
 * install docker, nodejs-8
 * if nodejs-8 cannot be installed, use docker pull node:8.11
 * install tippecanoe
-  - git clone git@github.com:mapbox/tippecanoe.git
-  - cd tippecanoe
-  - make -j
-  - sudo make install
+  - git clone git@github.com:mapbox/tippecanoe.git
+  - cd tippecanoe
+  - make -j
+  - sudo make install
 * git clone git@github.com:camptocamp/the-rolling-dutchman.git
 * cd the-rolling-dutchman
 * npm install (could take a long time)
@@ -40,7 +40,7 @@ Download from [here](https://transitfeeds.com/p/ov/814/latest) and save to `data
 Tadao is under a NDA. For CampToCamp users save to `data/Tadao/GTFS_Hiver_au_03-09-2018.zip`
 
 ## Data import
-The pipeline is the following GTFS -> mongodb -> GeoJSON -> vector tiles. The following section explain in details what must be done for each step.
+The pipeline is the following GTFS -> mongodb -> GeoJSON -> vector tiles. The following sections explain in details what must be done for each step.
 
 
 
@@ -52,7 +52,7 @@ The pipeline is the following GTFS -> mongodb -> GeoJSON -> vector tiles. The fo
 ```
 docker run -p 27017:27017 -v $PWD/data/mongodb:/data/db -d mongo:3.6.6-jessie --setParameter cursorTimeoutMillis=1800000
 ```
-* Get IP address of MongoDB container and substitue it in the config.json you use (e.g. configTadao/config-tadao.json)
+* Get IP address of MongoDB container and substitute it in the config.json you use (e.g. configTadao/config-tadao.json)
 * `docker run -it -v "${PWD}":/the-rolling-dutchman --rm -w /the-rolling-dutchman node:8.11 npm run import PATH_TO_CONFIG_FILE`
 
 In practice, there was some issues when the computer was restarted. I had to import in mongodb again (error message: use of closed session is not allowed).
