@@ -250,7 +250,7 @@ function initAnimateBusSource(map) {
     type: 'circle',
     paint: {
       'circle-radius': 6,
-      'circle-color': '#ff0000',
+      'circle-color': 'rgb(‎70, 130, 180)',
     },
   });
 }
