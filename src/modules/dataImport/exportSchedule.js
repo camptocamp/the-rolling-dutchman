@@ -113,7 +113,6 @@ async function exportScheduleToGeoJSON() {
   const agencyKeys = config.agencies.map(agency => agency.agency_key);
   let shapesIds = await gtfs.getShapeIds();
   const totalShapes = shapesIds.length;
-  // const filteredShapes = shapes.filter((shape, index) => (index % 10) === 0);
   let batchNumber = 0;
   mkdirp(getDirectoryName(configPath, config.outputPathForSchedule));
   while (shapesIds.length > 0) {

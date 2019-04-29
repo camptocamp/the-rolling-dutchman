@@ -246,18 +246,6 @@ function sortShape(shapePoints) {
   shapePoints.sort((a, b) => a.shape_pt_sequence - b.shape_pt_sequence);
 }
 
-function removeDuplicatesInSortedShape(shapePoints) {
-  return shapePoints.filter((item, pos, array) => {
-    const isFirstPos = !pos;
-    if (isFirstPos) {
-      return true;
-    }
-    const isSameThatPrecedent = item.shape_pt_lat === array[pos - 1].shape_pt_lat &&
-      item.shape_pt_lon === array[pos - 1].shape_pt_lon;
-    return !isSameThatPrecedent;
-  });
-}
-
 /*
 *  tripId have a unique shapeId
 *  a list of stopTimes defining the service
@@ -267,10 +255,10 @@ function removeDuplicatesInSortedShape(shapePoints) {
 * an array of array -> each element of the array is a trip i.e an array of
 * stoptimes with shape_dist_traveled
 */
-// returns a fractionShape with empty dictionary if stopTimesList is emptym can be a problem
+// returns a fractionShape with empty dictionary if stopTimesList is empty can be a problem
 function fractionShape(shapePoints, stopTimesList) {
   sortShape(shapePoints);
-  const shapePointsFiltered = removeDuplicatesInSortedShape(shapePoints);
+  const shapePointsFiltered = shapePoints;
   const fractionedShape = new FractionedShape(shapePointsFiltered);
   stopTimesList.forEach((stopTimes) => {
     createFragmentsForStopTimes(fractionedShape, shapePointsFiltered, stopTimes);
@@ -281,5 +269,5 @@ function fractionShape(shapePoints, stopTimesList) {
 export {
   fractionShape, makeKey, createFragmentsForStopTimes,
   FragmentedTrip, FractionedShape, differenceInSeconds,
-  toMinutes, removeDuplicatesInSortedShape,
+  toMinutes,
 };
