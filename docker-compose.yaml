@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  trd_vtiles:
+    image: klokantech/tileserver-gl:latest
+    ports:
+    - "8000:80"
+    volumes:
+    - ${PWD}/output/Tadao:/data
+
+  trd_web:
+    image: node:8.11
+    volumes:
+    - ${PWD}:/the-rolling-dutchman
+    ports:
+    - "8181:8000"
+    command: npm start
+    working_dir: /the-rolling-dutchman
